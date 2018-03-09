@@ -14,9 +14,9 @@ const isDevMode = process.execPath.match(/[\\/]electron/);
 console.log("isDevMode: " + (isDevMode !== null));
 let jsonPath = "";
 if (isDevMode) {
-	jsonPath = "D:/Documents/Creation/SteamTracker2/VueSteamTracker/json/";
+	jsonPath = process.execPath.match(/.*[\\/]SteamTracker[\\/]/) + "json/";
 } else {
-	jsonPath = "C:/Users/JAK/Documents/SteamTracker/";
+	jsonPath = remote.app.getPath("documents") + "/SteamTracker/";
 }
 
 const dataFilePath = "Play History.json";
