@@ -1,0 +1,47 @@
+v0.1:
+{
+	"games": [
+		{
+			"appid":220,
+			"name": "Half-Life 2",
+			"playtime_total":300, <-- in minutes
+			"playtime_history":[{"date":"2017-08-01T12:53:19.000Z","playtime":50},{"date":"2017-08-05T12:53:19.000Z","playtime":250}], <-- time is how much time was added, not total time
+			"playtime_offset": -120,
+			"last_played": "2017-08-05T12:53:19.000Z",
+			"spent":40.00,
+			"full_price":60.00, //  <-- at time of purchase, ideally
+			"purchase_date": "2017-07-26T12:53:19.000Z",
+			"gift":true,
+			"part_of_bundle":false,
+			"ignored":false,
+			"rating":0,
+			"tags":["Valve","Awesome"],
+			"img_icon_url":"fcfb366051782b8ebf2aa297f3b746395858cb62",
+			"img_logo_url":"e4ad9cf1b7dc8475c1118625daf9abd4bdcbcad0"
+		}
+	]
+}
+v0.2:
+{
+	"games": [
+		{
+			"appid":220,
+			"name": "Half-Life 2",
+			"totalPlaytime":300, // in minutes
+			"playtimeHistory":[{"date":"2017-08-01T12:53:19.000Z","playtime":50},{"date":"2017-08-05T12:53:19.000Z","playtime":250}], <-- time is how much time was added, not total time
+			"playtimeOffset": -120,
+			"lastPlayed": "2017-08-05T12:53:19.000Z",
+			"spent":40.00,
+			"fullPrice":60.00, // at time of purchase, ideally
+			"purchaseDate": "2017-07-26T12:53:19.000Z",
+			"gift":true,
+			"partOfBundle":false,
+			"ignored":false,
+			"rating":0,
+			"tags":["Valve","Awesome"],
+			"iconURL":"fcfb366051782b8ebf2aa297f3b746395858cb62",
+			"logoURL":"e4ad9cf1b7dc8475c1118625daf9abd4bdcbcad0",
+			"keep":true // Represents whether a game should be kept even though it is not in the responses from steam. Undefined if false (as it's irrelevant).
+		}
+	]
+}

@@ -1,0 +1,21 @@
+{
+	"include": [
+		"src/**/*.ts",
+		"src/**/*.vue"
+	],
+	"exclude": [
+		"node_modules"
+	],
+	"compilerOptions": {
+		// ...
+		"baseUrl": ".",
+		"paths": {
+			"@/*": [
+				"src/*"
+			]
+		},
+		"lib":["dom","es7"],
+		"strictNullChecks": true,
+		"experimentalDecorators": true
+	}
+}

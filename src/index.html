@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+
+    <link rel="stylesheet" type="text/css" href="css/base.css"/>
+
+    <title>SteamTracker</title>
+  </head>
+  <body>
+    <div id="app"></div>
+  </body>
+
+  <script lang="ts">
+  import Vue from 'vue';
+  import { ClientTable, Event } from 'vue-tables-2';
+  import App from './App.vue';
+  import { DataManager } from './renderer';
+  import EventBus from './EventBus';
+
+  Vue.use(ClientTable, {}, false, 'bootstrap3', 'default');
+
+  const dataManager = new DataManager(EventBus);
+
+  const app = new Vue(App);
+  app.$props.dataManager = dataManager;
+  app.$mount('#app');
+
+  </script>
+</html>
