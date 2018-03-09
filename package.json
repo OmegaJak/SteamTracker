@@ -1,0 +1,71 @@
+{
+  "name": "SteamTracker",
+  "productName": "steamtracker",
+  "version": "1.0.0",
+  "description": "My Electron application description",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish",
+    "lint": "echo \"No linting configured\""
+  },
+  "keywords": [],
+  "author": "JAK",
+  "license": "MIT",
+  "dependencies": {
+    "class-transformer": "^0.1.9",
+    "date-fns": "^1.29.0",
+    "electron": "^1.8.2-beta.2",
+    "electron-compile": "^6.4.2",
+    "electron-devtools-installer": "^2.2.3",
+    "electron-squirrel-startup": "^1.0.0",
+    "fs-jetpack": "^1.2.0",
+    "reflect-metadata": "^0.1.12",
+    "vue": "^2.5.13",
+    "vue-tables-2": "^1.2.42",
+    "vueify": "^9.4.1"
+  },
+  "devDependencies": {
+    "babel-plugin-transform-async-to-generator": "^6.24.1",
+    "typescript": "^2.7.1",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-react": "^6.24.1",
+    "electron-forge": "^4.3.0",
+    "electron-prebuilt-compile": "1.8.2-beta.3",
+    "tslint": "^5.8.0"
+  },
+  "config": {
+    "forge": {
+      "make_targets": {
+        "win32": [
+          "squirrel"
+        ],
+        "darwin": [
+          "zip"
+        ],
+        "linux": [
+          "deb",
+          "rpm"
+        ]
+      },
+      "electronPackagerConfig": {
+        "packageManager": "npm"
+      },
+      "electronWinstallerConfig": {
+        "name": "steamtracker"
+      },
+      "electronInstallerDebian": {},
+      "electronInstallerRedhat": {},
+      "github_repository": {
+        "owner": "",
+        "name": ""
+      },
+      "windowsStoreConfig": {
+        "packageName": "",
+        "name": "steamtracker"
+      }
+    }
+  }
+}

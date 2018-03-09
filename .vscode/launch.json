@@ -1,0 +1,73 @@
+{
+	// Use IntelliSense to learn about possible attributes.
+	// Hover to view descriptions of existing attributes.
+	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+	"version": "0.2.0",
+	"configurations": [
+		/* {
+			"type": "chrome",
+			"request": "attach",
+			"name": "Attach to Chrome",
+			"port": 5858,
+			"webRoot": "${workspaceFolder}"
+		}, */
+		{
+			"name": "Electron: Main",
+			"type": "node",
+			"request": "launch",
+			"runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron-forge-vscode-nix",
+			"windows": {
+			  "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron-forge-vscode-win.cmd"
+			},
+			"program": "${workspaceRoot}/src/index.js",
+			"port": 5858,
+			"runtimeArgs": [
+				"start",
+				"--inspect-brk=5858",
+				"--remote-debugging-port=9222"/* ,
+				"--nolazy" */
+			],
+			"cwd": "${workspaceRoot}"
+		},
+		{
+			"name": "Electron: Renderer",
+			"type": "chrome",
+			"request": "attach",
+			"port": 9222,
+			"webRoot": "${workspaceRoot}",
+			"timeout": 10000
+		},
+		{
+			"name": "Debug Renderer Process",
+			"type": "chrome",
+			"request": "launch",
+			"runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron-forge-vscode-nix",
+			"windows": {
+			  "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron-forge-vscode-win.cmd"
+			},
+			"runtimeArgs": [
+			  "${workspaceRoot}/src/index.js",
+			  "--remote-debugging-port=9222"
+			],
+			"webRoot": "${workspaceRoot}"
+		  }
+	],
+	"compounds": [
+		{
+			"name": "Electron: All",
+			"configurations": [
+				"Electron: Main",
+				"Electron: Renderer"
+			]
+		}
+	]
+	// "configurations": [
+    //     {
+    //         "type": "node",
+    //         "request": "launch",
+    //         "name": "Launch Electron",
+    //         "runtimeExecutable": "${workspaceRoot}\\node_modules\\.bin\\electron-forge-vscode-win.cmd",
+    //         "cwd": "${workspaceRoot}"
+    //     }
+    // ]
+}
