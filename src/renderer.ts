@@ -128,7 +128,6 @@ function parseGamesArray(games): GameMap {
 function updateGameHistory(newGamesData: GameMap, oldGamesData: GameMap, lastRun: string): GameMap {
 	console.log("Updating data");
 
-	// update stuff
 	// if it finds an unplayed game, it should update the only date there to the current date
 
 	let newGames = Array.from(newGamesData.values()).filter( game => {
@@ -143,46 +142,6 @@ function updateGameHistory(newGamesData: GameMap, oldGamesData: GameMap, lastRun
 		oldGamesData.set(oldGame.appid, oldGame);
 	});
 
-	//First check for new games by looking for differences between the existing data and the just-retrieved data
-	/* const existingGameIDs: number[] = [];
-	for (let game of oldGamesData) {
-		existingGameIDs.push(game.appid);
-	} */
-
-	/* const responseGameIDs: number[] = [];
-	for (let game of newGamesData) {
-		responseGameIDs.push(game.appid);
-	} */
-
-	/* const newGameIDs = responseGameIDs.filter( el => {
-		return !existingGameIDs.includes(el);
-	});
-
-	// Then add the new games to the existing games file
-	let newGame: Game;
-	for (let newGameID of newGameIDs) {
-		newGame = newGamesData.get(newGameID);
-	}
-
-	for (let gameID of newGameIDs) {
-		for (let game of newGamesData) {
-			if (game.appid === gameID) {
-				console.log("Found a new game: " + game.name);
-				let oldGame = initGame(game);
-				oldGame.setZero(lastRun);
-				gameUpdateLogic(oldGame, game, lastRun, true);
-				oldGamesData.push(oldGame);
-			}
-		}
-	}*/
-
-	/*for (let oldGame of oldGamesData) {
-		for (let responseGame of newGamesData) {
-			if (oldGame.appid === responseGame.appid) { // If we're comparing the same game
-				gameUpdateLogic(oldGame, responseGame, oldGame.playtimeHistory[oldGame.playtimeHistory.length - 1].date, false);
-			}
-		}
-	}*/
 	let responseGame: Game | undefined;
 	oldGamesData.forEach( (oldGame, appid) => {
 		responseGame = newGamesData.get(appid);
@@ -194,7 +153,7 @@ function updateGameHistory(newGamesData: GameMap, oldGamesData: GameMap, lastRun
 				if (response === 0) {
 					oldGame.keep = true;
 					gameUpdateLogic(oldGame, oldGame, lastRun, false);
-				} else { // response === 1
+				} else {
 					oldGamesData.delete(appid);
 				}
 			}
@@ -309,35 +268,6 @@ function migrateData(file) { // TODO: Investigate whether this is still valid
 		}
 	}
 }
-
-/* function constructNewGameData(game: Game): Game { // game is the source data for the game to be added
-	let now = new Date();
-	let gameData: Game;
-	gameData["appid"] = game["appid"];
-	gameData["name"] = game["name"];
-
-	let playtime_forever = game["playtime_forever"];
-	let playtime_2weeks = game["playtime_2weeks"];
-	gameData["playtime_total"] = playtime_forever;
-
-	gameData["playtime_history"] = []
-	if (playtime_2weeks === undefined || playtime_2weeks === 0) { // Haven't played the game in at least two weeks
-		gameData["playtime_history"].push(playtimeHist(lastPlayed(game).toISOString(), playtime_forever)); // Attribute all playtime to before two weeks ago
-		if (playtime_forever !== 0) {
-			gameData["playtime_history"].push(playtimeHist(now.toISOString(), 0));
-		}
-	} else { // Game's been played in the last two weeks
-		let twoWeeksAgo = addDays(new Date(), -14);
-		gameData["playtime_history"].push(playtimeHist(twoWeeksAgo.toISOString(), playtime_forever - playtime_2weeks)); // Time before two weeks ago
-		gameData["playtime_history"].push(playtimeHist(lastPlayed(game).toISOString(), playtime_2weeks));
-		gameData["playtime_history"].push(playtimeHist(now.toISOString(), 0));
-	}
-
-	gameData["img_icon_url"] = game["img_icon_url"];
-	gameData["img_logo_url"] = game["img_logo_url"];
-
-	return gameData;
-} */
 
 /*function runTests() {
 	const BSResponseOne = [
