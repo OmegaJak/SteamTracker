@@ -22,10 +22,13 @@ if (isDevMode) {
 const dataFilePath = "Play History.json";
 const CurrentFileVersion: number = 0.2;
 
+let time = 0;
+
 export class DataManager {
 	public historyFile: HistoryFile;
 
 	private eventBus: Vue;
+	private rawFile: any;
 
 	constructor(bus: Vue) {
 		this.eventBus = bus;
@@ -34,6 +37,24 @@ export class DataManager {
 	}
 
 	public onReady() {
+		time = Date.now();
+		jetpack.readAsync(jsonPath + "Play History.json", "json")
+		.then( file => {
+			this.rawFile = file;
+			this.tryUpdateData();
+
+			if (isDevMode && file && differenceInMinutes(new Date(), new Date(file.lastRun)) > 5) {
+				this.querySteam();
+			} else {
+				this.eventBus.$emit("games-updated", file.games);
+			}
+		});
+
+		if (!isDevMode)
+			this.querySteam();
+	}
+
+	private querySteam() {
 		ipcRenderer.send("gamesScrapeRequest");
 		ipcRenderer.on("gamesScrapeResponse", (event, arg) => {
 			console.log("Scrape response received:");
@@ -85,7 +106,7 @@ export class DataManager {
 			if (!this.historyFile.games)
 				throw new Error("Something went wrong getting games data!"); // Should be impossible
 
-			let file = jetpack.read(jsonPath + "Play History.json", "json");
+			let file = this.rawFile;
 
 			if (file) {
 				migrateData(file);
@@ -109,6 +130,7 @@ export class DataManager {
 			this.eventBus.$emit("games-updated", this.historyFile.games);
 
 			jetpack.write(jsonPath + "Play History.json", this.historyFile.getWriteableObject());
+			console.log("Time: " + (Date.now() - time));
 		}
 	}
 }
