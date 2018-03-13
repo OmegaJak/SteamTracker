@@ -43,10 +43,16 @@ export class DataManager {
 			this.rawFile = file;
 			this.tryUpdateData();
 
-			if (isDevMode && file && differenceInMinutes(new Date(), new Date(file.lastRun)) > 5) {
-				this.querySteam();
-			} else {
-				this.eventBus.$emit("games-updated", file.games);
+			if (isDevMode) {
+				if (file) {
+					if (differenceInMinutes(new Date(), new Date(file.lastRun)) > 5) {
+						this.querySteam();
+					} else {
+						this.eventBus.$emit("games-updated", file.games);
+					}
+				} else {
+					this.querySteam();
+				}
 			}
 		});
 
