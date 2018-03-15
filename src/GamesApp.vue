@@ -123,15 +123,11 @@ table {
 
 td {
   border-bottom: 1px solid #ddd;
+  padding: 5px;
 }
 
 table.table-hover tr:hover {
   background-color: #ddd;
-}
-
-::-webkit-scrollbar{
-    top: 100px;
-    bottom: 0px;
 }
 </style>
 
