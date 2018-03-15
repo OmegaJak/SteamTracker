@@ -54,6 +54,10 @@ export default {
         debounce: 0,
         pagination: { dropdown: false },
         perPageValues: [],
+        orderBy: {
+          ascending: false,
+          column: "lastPlayed",
+        },
       },
       props: ["data", "index"],
     };
