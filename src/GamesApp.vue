@@ -8,6 +8,9 @@
       <template slot="playtime" scope="props">
         {{ convertPlaytime(props.row.playtime) }}
       </template>
+      <template slot="cost" scope="props">
+        <cost-input v-model="props.row.cost"></cost-input>
+      </template>
       <template slot="lastPlayed" scope="props">
         {{ (isNaN(props.row.lastPlayed) || props.row.lastPlayed === 0) ? "-" : new Date(props.row.lastPlayed).toLocaleString() }}
       </template>
@@ -23,6 +26,7 @@ import { PlaytimePoint, Game, GameMap } from "./Game";
 import EventBus from "./EventBus";
 import jetpack = require("fs-jetpack");
 import { Data } from "electron";
+import VueNumeric from "vue-numeric";
 
 export default {
   data() {
@@ -107,6 +111,9 @@ export default {
       return toReturn;
     },
   },
+  components: {
+    CostInput: require("./CostInput.vue"),
+  },
 };
 </script>
 
@@ -145,7 +152,7 @@ div {
   font-family: Helvetica;
 }
 
-input[type="text"] {
+#game_search {
   width: 100%;
   height: 40px;
   font-size: x-large;
