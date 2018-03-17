@@ -9,6 +9,7 @@ import Vue from "Vue";
 
 import { PlaytimePoint, Game, ScrapeData, GameMap } from "./Game";
 import { HistoryFile } from "./HistoryFile";
+import Events from "./Events";
 
 const isDevMode = process.execPath.match(/[\\/]electron/);
 console.log("isDevMode: " + (isDevMode !== null));
@@ -47,7 +48,7 @@ export class DataManager {
 					if (file.lastRun === undefined || differenceInMinutes(new Date(), new Date(file.lastRun)) > 5) {
 						this.querySteam();
 					} else {
-						this.eventBus.$emit("games-updated", file.games);
+						this.eventBus.$emit(Events.gamesUpdated, file.games);
 					}
 				} else {
 					this.querySteam();
@@ -132,7 +133,7 @@ export class DataManager {
 				this.historyFile.games = initializeGames(this.historyFile.games);
 			}
 
-			this.eventBus.$emit("games-updated", this.historyFile.games);
+			this.eventBus.$emit(Events.gamesUpdated, this.historyFile.games);
 
 			jetpack.write(jsonPath + "Play History.json", this.historyFile.getWriteableObject());
 			console.log("Time: " + (Date.now() - time));

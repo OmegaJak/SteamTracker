@@ -24,6 +24,7 @@
 import { DataManager } from "./renderer";
 import { PlaytimePoint, Game, GameMap } from "./Game";
 import EventBus from "./EventBus";
+import Events from "./Events";
 import jetpack = require("fs-jetpack");
 import { Data } from "electron";
 import VueNumeric from "vue-numeric";
@@ -72,7 +73,7 @@ export default {
     },
   },
   created() {
-    EventBus.$on("games-updated", response => {
+    EventBus.$on(Events.gamesUpdated, response => {
       let responseGames: GameMap = response;
       responseGames.forEach( game => {
         this.tableData.push({
