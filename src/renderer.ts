@@ -41,11 +41,10 @@ export class DataManager {
 		jetpack.readAsync(jsonPath + "Play History.json", "json")
 		.then( file => {
 			this.rawFile = file;
-			this.tryUpdateData();
 
 			if (isDevMode) {
 				if (file) {
-					if (differenceInMinutes(new Date(), new Date(file.lastRun)) > 5) {
+					if (file.lastRun === undefined || differenceInMinutes(new Date(), new Date(file.lastRun)) > 5) {
 						this.querySteam();
 					} else {
 						this.eventBus.$emit("games-updated", file.games);
