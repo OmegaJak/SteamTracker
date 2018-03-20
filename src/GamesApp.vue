@@ -9,7 +9,7 @@
         {{ convertPlaytime(props.row.playtime) }}
       </template>
       <template slot="cost" scope="props">
-        <cost-input v-model="props.row.cost"></cost-input>
+        <cost-input :data="props.row"></cost-input>
       </template>
       <template slot="lastPlayed" scope="props">
         {{ (isNaN(props.row.lastPlayed) || props.row.lastPlayed === 0) ? "-" : new Date(props.row.lastPlayed).toLocaleString() }}
@@ -25,9 +25,9 @@ import { DataManager } from "./renderer";
 import { PlaytimePoint, Game, GameMap } from "./Game";
 import EventBus from "./EventBus";
 import Events from "./Events";
+// import CostInput = require("./CostInput.vue");
 import jetpack = require("fs-jetpack");
 import { Data } from "electron";
-import VueNumeric from "vue-numeric";
 
 export default {
   data() {
@@ -63,9 +63,15 @@ export default {
           ascending: false,
           column: "lastPlayed",
         },
+        // templates: {
+        //   cost: CostInput,
+        // },
       },
       props: ["data", "index"],
     };
+  },
+  components: {
+    CostInput: require("./CostInput.vue"),
   },
   watch: {
     searchFilter(val) {
@@ -81,11 +87,17 @@ export default {
           image: "http://media.steampowered.com/steamcommunity/public/images/apps/" + game.appid + "/" + game.logoURL + ".jpg",
           name: game.name,
           playtime: game.totalPlaytime,
-          cost: "",
+          cost: game.spent,
           costPerHr: "",
           lastPlayed: game.lastPlayed ? new Date(game.lastPlayed).valueOf() : 0,
           rating: "",
         });
+      });
+    });
+    EventBus.$on(Events.costUpdated, (appid, cost) => {
+      this.tableData.forEach(data => {
+        if (data.appid === appid)
+          data.cost = cost;
       });
     });
   },
@@ -111,9 +123,6 @@ export default {
 
       return toReturn;
     },
-  },
-  components: {
-    CostInput: require("./CostInput.vue"),
   },
 };
 </script>
