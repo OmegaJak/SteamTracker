@@ -47,3 +47,23 @@ export default {
 	},
 };
 </script>
+
+<style scoped>
+input[type=text] {
+	width: 75%;
+	font-size: inherit;
+	padding: 5px 3px;
+	border-radius: 4px;
+	border: 1px solid #ccc;
+}
+
+input[type=text]:hover {
+	border: 1px solid #799905;
+}
+
+input[type=text]:focus {
+	border: 2px solid #799905;
+	outline: #799905;
+	padding: 4px 2px;
+}
+</style>
