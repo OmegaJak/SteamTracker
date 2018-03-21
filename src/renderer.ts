@@ -33,8 +33,6 @@ export class DataManager {
 		this.eventBus = bus;
 		this.historyFile = new HistoryFile();
 		this.historyFile.version = CurrentFileVersion;
-
-		this.addListeners();
 	}
 
 	public onReady() {
@@ -142,42 +140,6 @@ export class DataManager {
 
 			this.writeHistory();
 			console.timeEnd("mainUpdate");
-		}
-	}
-
-	private addListeners() {
-		this.eventBus.$on(Events.costUpdated, this.test(this));
-	}
-
-	private test(dataMan: DataManager) {
-		return (appid: number, cost: string) => {
-			if (dataMan.historyFile === undefined)
-			throw new Error ("The historyFile was undefined when costUpdated was called!");
-
-			if (dataMan.historyFile.games === undefined || dataMan.historyFile.games.get(appid) === undefined)
-				throw new Error("Either the historyFile's games was undefined or " + appid + " is an invalid appid!");
-
-			let costAsNum = (cost === "" || cost === undefined) ? undefined : Number(cost);
-
-			if (costAsNum !== dataMan.historyFile.games.get(appid)!.spent) {
-				dataMan.historyFile.games.get(appid)!.spent = costAsNum;
-				dataMan.writeHistory();
-			}
-		};
-	}
-
-	private costUpdated(hist: HistoryFile, appid: number, cost: string) {
-		if (this.historyFile === undefined)
-			throw new Error ("The historyFile was undefined when costUpdated was called!");
-
-		if (this.historyFile.games === undefined || this.historyFile.games.get(appid) === undefined)
-			throw new Error("Either the historyFile's games was undefined or " + appid + " is an invalid appid!");
-
-		let costAsNum = cost === "" ? undefined : Number(cost);
-
-		if (costAsNum !== this.historyFile.games.get(appid)!.spent) {
-			this.historyFile.games.get(appid)!.spent = costAsNum;
-			this.writeHistory();
 		}
 	}
 }
