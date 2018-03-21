@@ -11,6 +11,9 @@
       <template slot="cost" scope="props">
         <cost-input :data="props.row"></cost-input>
       </template>
+      <template slot="costPerHr" scope="props">
+        {{ getCostPerHr(props.row.cost, props.row.playtime) }}
+      </template>
       <template slot="lastPlayed" scope="props">
         {{ (isNaN(props.row.lastPlayed) || props.row.lastPlayed === 0) ? "-" : new Date(props.row.lastPlayed).toLocaleString() }}
       </template>
@@ -76,9 +79,23 @@ export default {
               let numB = toNum(b);
 
               if (ascending)
-                return numA >= numB ? 1 : -1;
-
-              return numA <= numB ? 1 : -1;
+                return numA >= numB ? 1 : -1; // 1 is a above, -1 is a below
+              else
+                return numA <= numB ? 1 : -1;
+            };
+          },
+          costPerHr: ascending => {
+            return (a, b) => {
+              if (a.costPerHr === String("-")) {
+                return 1;
+              } else if (b.costPerHr === String("-")) {
+                return -1;
+              } else {
+                if (ascending)
+                  return a.costPerHr >= b.costPerHr ? 1 : -1;
+                else
+                  return a.costPerHr <= b.costPerHr ? 1 : -1;
+              }
             };
           },
         },
@@ -107,7 +124,7 @@ export default {
           name: game.name,
           playtime: game.totalPlaytime,
           cost: formatDollars(game.spent === undefined ? "" : String(game.spent)),
-          costPerHr: "",
+          costPerHr: this.getCostPerHr(game.spent, game.totalPlaytime),
           lastPlayed: game.lastPlayed ? new Date(game.lastPlayed).valueOf() : 0,
           rating: "",
         });
@@ -141,6 +158,12 @@ export default {
       toReturn += playtime % 60 + "m";
 
       return toReturn;
+    },
+    getCostPerHr(cost: string, playtimeMinutes: number) {
+      let costAsNum = (cost === "" || cost === undefined) ? 0 : Number(cost);
+      if (playtimeMinutes === 0)
+        return "-";
+      return +(costAsNum / (playtimeMinutes / 60)).toFixed(3); // Rounds to 3 decimals (sorta poorly)
     },
   },
 };
