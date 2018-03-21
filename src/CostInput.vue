@@ -5,6 +5,7 @@
 <script lang="ts">
 import EventBus from "./EventBus";
 import Events from "./Events";
+import { formatDollars } from "./SteamTrackerLib";
 
 export default {
   data() {
@@ -19,7 +20,7 @@ export default {
 	},
 	props: ["data", "index"],
 	created() {
-		this.formatDollars();
+		this.format();
 	},
 	methods: {
 		filterInputs(event) {
@@ -29,20 +30,14 @@ export default {
 			}
 		},
 		updateCost() {
-			this.formatDollars();
+			this.format();
 
 			// Use the setTimeout here to make the call asynchronous. When synchronous the $emit call took
 			// up to 40ms, which delayed the time for the input value to format noticeably
 			setTimeout(() => { EventBus.$emit(Events.costUpdated, this.data.appid, this.cost); }, 0);
 		},
-		formatDollars() {
-      if (this.cost !== "" && this.cost !== undefined) {
-				let num = Number(this.cost); // Converting to Number removes trailing zeros
-				let parts = String(num).split(".");
-
-				if (parts.length === 1 || parts[1].length < 2)
-					this.cost = num.toFixed(2);
-			}
+		format() {
+      this.cost = formatDollars(this.cost);
 		},
 	},
 };

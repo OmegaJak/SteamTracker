@@ -25,6 +25,7 @@ import { DataManager } from "./renderer";
 import { PlaytimePoint, Game, GameMap } from "./Game";
 import EventBus from "./EventBus";
 import Events from "./Events";
+import { formatDollars } from "./SteamTrackerLib";
 // import CostInput = require("./CostInput.vue");
 import jetpack = require("fs-jetpack");
 import { Data } from "electron";
@@ -104,7 +105,7 @@ export default {
           image: "http://media.steampowered.com/steamcommunity/public/images/apps/" + game.appid + "/" + game.logoURL + ".jpg",
           name: game.name,
           playtime: game.totalPlaytime,
-          cost: game.spent,
+          cost: formatDollars(game.spent === undefined ? "" : String(game.spent)),
           costPerHr: "",
           lastPlayed: game.lastPlayed ? new Date(game.lastPlayed).valueOf() : 0,
           rating: "",
