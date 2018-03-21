@@ -1,15 +1,10 @@
 <template>
-	<div> {{ format(this.costPerHr) }} </div>
+	<div> {{ format(getCostPerHr(this.cost, this.playtime)) }} </div>
 </template>
 
 <script lang="ts">
 export default {
-  data() {
-    return {
-			displayValue: this.format(this.costPerHr),
-		};
-	},
-	props: ["costPerHr"],
+	props: ["cost", "playtime"],
 	methods: {
 		format(val) {
 			if (val === String("-")) {
@@ -18,6 +13,12 @@ export default {
         return val.toFixed(2);
       }
 		},
+		getCostPerHr(cost: string, playtimeMinutes: number) {
+			let costAsNum = (cost === "" || cost === undefined) ? 0 : Number(cost);
+			if (playtimeMinutes === 0)
+				return "-";
+			return costAsNum / (playtimeMinutes / 60); // Rounds to 3 decimals (sorta poorly)
+		},
 	},
-}
+};
 </script>
