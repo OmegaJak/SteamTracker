@@ -64,6 +64,7 @@ export default {
           ascending: false,
           column: "lastPlayed",
         },
+        descOrderColumns: ["playtime", "cost", "lastPlayed"],
         customSorting: {
           cost: ascending => {
             return (a, b) => {
