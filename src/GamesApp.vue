@@ -63,6 +63,23 @@ export default {
           ascending: false,
           column: "lastPlayed",
         },
+        customSorting: {
+          cost: ascending => {
+            return (a, b) => {
+              function toNum(x) {
+                return (x.cost === "" || x.cost === undefined) ? Number.NEGATIVE_INFINITY : Number(x.cost);
+              }
+
+              let numA = toNum(a);
+              let numB = toNum(b);
+
+              if (ascending)
+                return numA >= numB ? 1 : -1;
+
+              return numA <= numB ? 1 : -1;
+            };
+          },
+        },
         // templates: {
         //   cost: CostInput,
         // },
