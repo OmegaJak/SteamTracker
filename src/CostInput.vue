@@ -31,7 +31,7 @@ export default {
 				newValue += event.clipboardData.getData("text/plain");
 			}
 
-			let validNum = /^(\d*\.)?\d*$/.test(newValue);
+			let validNum = !isNaN(Number(newValue));
 			if (!validNum) {
 				event.preventDefault();
 			}
