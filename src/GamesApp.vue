@@ -12,7 +12,7 @@
         <cost-input :data="props.row"></cost-input>
       </template>
       <template slot="costPerHr" scope="props">
-        {{ getCostPerHr(props.row.cost, props.row.playtime) }}
+        <cost-per-hr :costPerHr="getCostPerHr(props.row.cost, props.row.playtime)"></cost-per-hr>
       </template>
       <template slot="lastPlayed" scope="props">
         {{ (isNaN(props.row.lastPlayed) || props.row.lastPlayed === 0) ? "-" : new Date(props.row.lastPlayed).toLocaleString() }}
@@ -86,9 +86,16 @@ export default {
           },
           costPerHr: ascending => {
             return (a, b) => {
+              // This relies on the order the if statements are evaluated in
+              // By testing "-" first, it's at the far bottom
+              // Then there are 0's, then normal sorting
               if (a.costPerHr === String("-")) {
                 return 1;
               } else if (b.costPerHr === String("-")) {
+                return -1;
+              } else if (a.costPerHr === 0) {
+                return 1;
+              } else if (b.costPerHr === 0) {
                 return -1;
               } else {
                 if (ascending)
@@ -108,6 +115,7 @@ export default {
   },
   components: {
     CostInput: require("./CostInput.vue"),
+    CostPerHr: require("./CostPerHr.vue"),
   },
   watch: {
     searchFilter(val) {
@@ -163,7 +171,7 @@ export default {
       let costAsNum = (cost === "" || cost === undefined) ? 0 : Number(cost);
       if (playtimeMinutes === 0)
         return "-";
-      return +(costAsNum / (playtimeMinutes / 60)).toFixed(3); // Rounds to 3 decimals (sorta poorly)
+      return costAsNum / (playtimeMinutes / 60); // Rounds to 3 decimals (sorta poorly)
     },
   },
 };
