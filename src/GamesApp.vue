@@ -12,7 +12,7 @@
         <cost-input :data="props.row"></cost-input>
       </template>
       <template slot="costPerHr" scope="props">
-        <cost-per-hr :costPerHr="getCostPerHr(props.row.cost, props.row.playtime)"></cost-per-hr>
+        <cost-per-hr :cost="props.row.cost" :playtime="props.row.playtime" ref="costPerHr"></cost-per-hr>
       </template>
       <template slot="lastPlayed" scope="props">
         {{ (isNaN(props.row.lastPlayed) || props.row.lastPlayed === 0) ? "-" : new Date(props.row.lastPlayed).toLocaleString() }}
@@ -86,22 +86,25 @@ export default {
           },
           costPerHr: ascending => {
             return (a, b) => {
+              let aCost = this.$refs.costPerHr.getCostPerHr(a.cost, a.playtime);
+              let bCost = this.$refs.costPerHr.getCostPerHr(b.cost, b.playtime);
+
               // This relies on the order the if statements are evaluated in
               // By testing "-" first, it's at the far bottom
               // Then there are 0's, then normal sorting
-              if (a.costPerHr === String("-")) {
+              if (aCost === String("-")) {
                 return 1;
-              } else if (b.costPerHr === String("-")) {
+              } else if (bCost === String("-")) {
                 return -1;
-              } else if (a.costPerHr === 0) {
+              } else if (aCost === 0) {
                 return 1;
-              } else if (b.costPerHr === 0) {
+              } else if (bCost === 0) {
                 return -1;
               } else {
                 if (ascending)
-                  return a.costPerHr >= b.costPerHr ? 1 : -1;
+                  return aCost >= bCost ? 1 : -1;
                 else
-                  return a.costPerHr <= b.costPerHr ? 1 : -1;
+                  return aCost <= bCost ? 1 : -1;
               }
             };
           },
@@ -132,7 +135,7 @@ export default {
           name: game.name,
           playtime: game.totalPlaytime,
           cost: formatDollars(game.spent === undefined ? "" : String(game.spent)),
-          costPerHr: this.getCostPerHr(game.spent, game.totalPlaytime),
+          costPerHr: "",
           lastPlayed: game.lastPlayed ? new Date(game.lastPlayed).valueOf() : 0,
           rating: "",
         });
@@ -166,12 +169,6 @@ export default {
       toReturn += playtime % 60 + "m";
 
       return toReturn;
-    },
-    getCostPerHr(cost: string, playtimeMinutes: number) {
-      let costAsNum = (cost === "" || cost === undefined) ? 0 : Number(cost);
-      if (playtimeMinutes === 0)
-        return "-";
-      return costAsNum / (playtimeMinutes / 60); // Rounds to 3 decimals (sorta poorly)
     },
   },
 };
