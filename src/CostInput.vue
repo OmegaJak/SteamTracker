@@ -1,5 +1,5 @@
 <template>
-	<input type="text" min="0" v-model="cost" @keypress="filterInputs($event)" @blur="updateCost">
+	<input type="text" min="0" v-model="cost" @keypress="filterInputs($event)" @blur="updateCost" @paste="filterInputs($event)">
 </template>
 
 <script lang="ts">
@@ -24,7 +24,14 @@ export default {
 	},
 	methods: {
 		filterInputs(event) {
-			let validNum = /^(\d*\.)?\d*$/.test(event.target.value + event.key);
+			let newValue = event.target.value;
+			if (event instanceof KeyboardEvent) {
+				newValue += event.key;
+			} else if (event instanceof ClipboardEvent) {
+				newValue += event.clipboardData.getData("text/plain");
+			}
+
+			let validNum = /^(\d*\.)?\d*$/.test(newValue);
 			if (!validNum) {
 				event.preventDefault();
 			}
