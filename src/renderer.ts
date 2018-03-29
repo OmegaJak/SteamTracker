@@ -38,14 +38,17 @@ export class DataManager {
 	public onReady() {
 		console.time("mainUpdate");
 		console.time("readFile");
+		this.eventBus.$emit(Events.fetchingData, true, "Reading File on Disk...");
 		jetpack.readAsync(jsonPath + "Play History.json", "json")
 		.then( file => {
 			console.timeEnd("readFile");
 			this.rawFile = file;
 
+			if (file)
+				this.eventBus.$emit(Events.gamesUpdated, this.rawFile.games);
+
 			if (isDevMode) {
 				if (file) {
-					this.eventBus.$emit(Events.gamesUpdated, this.rawFile.games);
 					if (file.lastRun === undefined || differenceInMinutes(new Date(), new Date(file.lastRun)) > 5) {
 						this.querySteam();
 					} else {
@@ -55,6 +58,7 @@ export class DataManager {
 					this.querySteam();
 				}
 			}
+			this.eventBus.$emit(Events.fetchingData, false);
 		});
 
 		if (!isDevMode)
@@ -66,6 +70,8 @@ export class DataManager {
 	}
 
 	private querySteam() {
+		this.eventBus.$emit(Events.fetchingData, true, "Fetching Steam Data...");
+
 		ipcRenderer.send("gamesScrapeRequest");
 		ipcRenderer.on("gamesScrapeResponse", (event, arg) => {
 			console.log("Scrape response received:");
@@ -139,6 +145,7 @@ export class DataManager {
 			}
 
 			this.eventBus.$emit(Events.gamesUpdated, this.historyFile.games);
+			this.eventBus.$emit(Events.fetchingData, false);
 
 			this.writeHistory();
 			console.timeEnd("mainUpdate");
