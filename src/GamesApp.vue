@@ -128,6 +128,7 @@ export default {
   created() {
     EventBus.$on(Events.gamesUpdated, response => {
       let responseGames: GameMap = response;
+      this.tableData = [];
       responseGames.forEach( game => {
         this.tableData.push({
           appid: game.appid,
