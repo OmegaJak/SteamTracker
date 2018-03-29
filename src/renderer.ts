@@ -37,16 +37,18 @@ export class DataManager {
 
 	public onReady() {
 		console.time("mainUpdate");
+		console.time("readFile");
 		jetpack.readAsync(jsonPath + "Play History.json", "json")
 		.then( file => {
+			console.timeEnd("readFile");
 			this.rawFile = file;
 
 			if (isDevMode) {
 				if (file) {
+					this.eventBus.$emit(Events.gamesUpdated, this.rawFile.games);
 					if (file.lastRun === undefined || differenceInMinutes(new Date(), new Date(file.lastRun)) > 5) {
 						this.querySteam();
 					} else {
-						this.eventBus.$emit(Events.gamesUpdated, file.games);
 						this.historyFile.games = parseGamesArray(file.games);
 					}
 				} else {
