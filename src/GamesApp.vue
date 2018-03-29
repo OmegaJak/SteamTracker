@@ -1,6 +1,6 @@
 <template>
 	<div>
-    <input id="game_search" v-model="searchFilter" type="text" placeholder="Search Games" >
+    <input id="game_search" v-model="searchFilter" type="text" :placeholder="searchPlaceholder" >
     <v-client-table class="fixed_headers" ref="table" :columns="columns" :data="tableData" :options="options" :show-pagination="false">
       <template slot="image" scope="props">
         <img :src="props.row.image" @click="showGameData(props)">
@@ -37,6 +37,7 @@ export default {
   data() {
     return {
       searchFilter: "",
+      searchPlaceholder: "Search Games",
       tableData: [],
       columns: [
         "image",
@@ -147,6 +148,13 @@ export default {
         if (data.appid === appid)
           data.cost = cost;
       });
+    });
+    EventBus.$on(Events.fetchingData, (isFetching, message) => {
+      if (isFetching) {
+        this.searchPlaceholder = message;
+      } else {
+        this.searchPlaceholder = "Search Games";
+      }
     });
   },
   props: {
