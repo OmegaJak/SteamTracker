@@ -10,6 +10,7 @@ import Vue from "Vue";
 import { PlaytimePoint, Game, ScrapeData, GameMap } from "./Game";
 import { HistoryFile } from "./HistoryFile";
 import Events from "./Events";
+import { SteamData } from "./DataSource";
 
 const isDevMode = process.execPath.match(/[\\/]electron/);
 console.log("isDevMode: " + (isDevMode !== null));
@@ -44,21 +45,15 @@ export class DataManager {
 			console.timeEnd("readFile");
 			this.rawFile = file;
 
-			if (file)
+			if (file) {
 				this.eventBus.$emit(Events.gamesUpdated, this.rawFile.games);
 
-			if (isDevMode) {
-				if (file) {
-					if (file.lastRun === undefined || differenceInMinutes(new Date(), new Date(file.lastRun)) > 5) {
-						this.querySteam();
-					} else {
-						this.historyFile.games = parseGamesArray(file.games);
-					}
-				} else {
-					this.querySteam();
-				}
+				migrateData(file);
+
+				this.historyFile = new HistoryFile(parseGamesArray(file.games), file.version, file.lastRun);
 			}
-			this.eventBus.$emit(Events.fetchingData, false);
+
+			this.querySteam();
 		});
 
 		if (!isDevMode)
@@ -69,87 +64,27 @@ export class DataManager {
 		jetpack.write(jsonPath + "Play History.json", this.historyFile.getWriteableObject());
 	}
 
-	private querySteam() {
+	private async querySteam() {
 		this.eventBus.$emit(Events.fetchingData, true, "Fetching Steam Data...");
+		console.log("Querying Steam...");
 
-		ipcRenderer.send("gamesScrapeRequest");
-		ipcRenderer.on("gamesScrapeResponse", (event, arg) => {
-			console.log("Scrape response received:");
-			console.log(arg);
-			this.historyFile.addScrapeData(arg as ScrapeData[]);
-			this.tryUpdateData();
-		});
+		let steamData: GameMap = await new SteamData().getData();
+		this.updateData(steamData);
 
-		const fields = [
-			"key=PUTYOURKEYHERE",
-			"steamid=PUTYOURIDHERE",
-			"format=json",
-			"include_appinfo=1",
-			"include_played_free_games=1",
-		];
-
-		const params = fields.join("&");
-		const url = "http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?" + params;
-		console.log(url);
-
-		const xhttp = new XMLHttpRequest();
-		xhttp.onreadystatechange = () => {
-			if (xhttp.readyState === 4 && xhttp.status === 200) {
-				const response = JSON.parse(xhttp.response);
-				console.log("Response:");
-				console.log(response);
-
-				let responseGames: GameMap = new Map<number, Game>();
-				let currentGame: Game;
-				for (const responseGame of response.response.games) {
-					currentGame = new Game(responseGame.appid, responseGame.name, responseGame.playtime_forever, [], responseGame.img_logo_url);
-					currentGame.iconURL = responseGame.img_icon_url;
-					currentGame.playtime2Weeks = responseGame.playtime_2weeks;
-					responseGames.set(currentGame.appid, currentGame);
-				}
-
-				this.historyFile.addResponseGames(responseGames);
-				this.tryUpdateData();
-
-				jetpack.write(jsonPath + "response.json", response.response);
-			}
-		};
-		xhttp.open("GET", url);
-		xhttp.send();
+		console.timeEnd("mainUpdate");
 	}
 
-	private tryUpdateData() {
-		if (this.historyFile.isReady()) {
-			if (!this.historyFile.games)
-				throw new Error("Something went wrong getting games data!"); // Should be impossible
-
-			let file = this.rawFile;
-
-			if (file) {
-				migrateData(file);
-
-				let oldHistory = new HistoryFile(parseGamesArray(file.games), file.version, file.lastRun);
-				if (!oldHistory.games)
-					throw new Error("\"Play History.json\" was formatted incorrectly.");
-
-				oldHistory.copyLastPlayedFrom(this.historyFile);
-
-				console.log("Current File: ");
-				console.log(this.historyFile);
-				this.historyFile.games = updateGameHistory(this.historyFile.games, oldHistory.games, oldHistory.lastRun);
-				this.historyFile.lastRun = oldHistory.lastRun;
-				console.log("After update: ");
-				console.log(this.historyFile);
-			} else {
-				this.historyFile.games = initializeGames(this.historyFile.games);
-			}
-
-			this.eventBus.$emit(Events.gamesUpdated, this.historyFile.games);
-			this.eventBus.$emit(Events.fetchingData, false);
-
-			this.writeHistory();
-			console.timeEnd("mainUpdate");
+	private updateData(newData: Map<number, Game>) {
+		if (this.historyFile.games === undefined) {
+			this.historyFile.games = initializeGames(newData);
+		} else {
+			this.historyFile.games = updateGameHistory(newData, this.historyFile.games, this.historyFile.lastRun);
 		}
+
+		this.eventBus.$emit(Events.gamesUpdated, this.historyFile.games);
+		this.eventBus.$emit(Events.fetchingData, false);
+
+		this.writeHistory();
 	}
 }
 
@@ -170,6 +105,7 @@ function updateGameHistory(newGamesData: GameMap, oldGamesData: GameMap, lastRun
 
 	// if it finds an unplayed game, it should update the only date there to the current date
 
+	// games in newGamesData that aren't in oldGamesData
 	let newGames = Array.from(newGamesData.values()).filter( game => {
 		return !oldGamesData.has(game.appid);
 	});
@@ -179,7 +115,7 @@ function updateGameHistory(newGamesData: GameMap, oldGamesData: GameMap, lastRun
 		let oldGame = initGame(newGame);
 		oldGame.setZero(lastRun);
 		gameUpdateLogic(oldGame, newGame, lastRun, true);
-		oldGamesData.set(oldGame.appid, oldGame);
+		oldGamesData.set(oldGame.appid, oldGame); // Don't think this is necessary
 	});
 
 	let responseGame: Game | undefined;
