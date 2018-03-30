@@ -62,19 +62,4 @@ export class HistoryFile {
 		}
 		return str;
 	}
-
-	/**
-	 * When given another history file, this copies the lastPlayed value for each game in other
-	 * into each game of this
-	 */
-	public copyLastPlayedFrom(other: HistoryFile) {
-		if (!(other.games && this.games))
-			throw new Error("Can't copy last played when the games object is undefined!");
-
-		other.games.forEach( (game, appid) => {
-			if (this.games && this.games.has(appid)) {
-				this.games.get(appid)!.lastPlayed = game.lastPlayed;
-			}
-		});
-	}
 }
