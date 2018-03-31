@@ -94,6 +94,9 @@ function parseGamesArray(games): GameMap {
 	let gamesArr = deserializeArray(Game, JSON.stringify(games));
 
 	for (let game of gamesArr) {
+		if (game.children !== undefined) {
+			game.children = parseGamesArray(game.children);
+		}
 		toReturn.set(game.appid, game);
 	}
 
