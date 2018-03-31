@@ -43,6 +43,7 @@ export class Game {
 	iconURL?: string;
 	logoURL: string;
 	keep?: boolean;
+	children?: GameMap;
 
 	// Properties not stored
 	playtime2Weeks?: number;
