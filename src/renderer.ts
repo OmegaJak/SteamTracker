@@ -126,15 +126,11 @@ function updateGameHistory(newGamesData: GameMap, oldGamesData: GameMap, lastRun
 		responseGame = newGamesData.get(appid);
 		if (responseGame === undefined) {
 			if (oldGame.keep === undefined || !oldGame.keep) {
-				let response = dialog.showMessageBox({ type: "question", buttons: ["Yes", "No"], title: "Question",
-														message: oldGame.name + " has been removed from Steam. \n" +
-																"Would you like to keep its data anyway?"});
-				if (response === 0) {
-					oldGame.keep = true;
-					gameUpdateLogic(oldGame, oldGame, lastRun, false);
-				} else {
-					oldGamesData.delete(appid);
-				}
+				getConfirmation(oldGame.name + " has been removed from Steam. \n" + "Would you like to keep its data anyway?",
+								() => {
+									oldGame.keep = true;
+									gameUpdateLogic(oldGame, oldGame, lastRun, false);
+								}, () => { oldGamesData.delete(appid); });
 			}
 		} else {
 			gameUpdateLogic(oldGame, responseGame, lastRun, false);
@@ -181,19 +177,34 @@ function gameUpdateLogic(oldGame: Game, responseGame: Game, mostRecentDate: stri
 		oldGame.setZero(now);
 	}
 
-	oldGame.totalPlaytime = responseGame.totalPlaytime;
+	updateOtherProperties(responseGame, oldGame);
+}
+
+function updateOtherProperties(newGame: Game, oldGame: Game) {
+	Object.keys(newGame).forEach(key => {
+		if (key !== "playtimeHistory" && newGame[key] !== undefined) {
+			if (oldGame[key] !== undefined && newGame[key] !== oldGame[key]) {
+				if (key === "lastPlayed" || key === "totalPlaytime") {
+					oldGame[key] = newGame[key];
+				} else {
+					getConfirmation(`Would you like to update the ${key} property of ${oldGame.name} from
+						"${oldGame[key]}" to "${newGame[key]}"?`, () => { oldGame[key] = newGame[key]; });
+				}
+			} else {
+				oldGame[key] = newGame[key];
+			}
+		}
+	});
 }
 
 function determineChunkage(oldGame: Game, responseGame: Game, mostRecentDate: string, diff: number) { // May or may not support updates mid-game
 	let prePlay = subMinutes(lastPlayed(responseGame), diff); // Basically the time when the game would've been started had the recent playtime been in one chunk
 	if (Math.abs(differenceInMinutes(prePlay, mostRecentDate)) > 5) { // If it had been over 5 minutes between when the game was last checked and it was theoretically started
-		let response = dialog.showMessageBox({ type: "question", buttons: ["Yes", "No"], title: "Question",
-			message: "Was the recent " + diff + " minutes of " + responseGame.name + " in one chunk?\n" +
-						" (it was last played on " + lastPlayed(responseGame).toLocaleString() + ")"});
-		if (response === 0) { // Yes
-			// Bring the zero up to just before the game would've been started
-			oldGame.setZero(prePlay);
-		}
+		getConfirmation("Was the recent " + diff + " minutes of " + responseGame.name + " in one chunk?\n" +
+						" (it was last played on " + lastPlayed(responseGame).toLocaleString() + ")", () => {
+							// Bring the zero up to just before the game would've been started
+							oldGame.setZero(prePlay);
+						});
 	}
 }
 
@@ -246,6 +257,17 @@ function migrateData(file) { // TODO: Investigate whether this is still valid
 			}
 		}
 	}
+}
+
+function getConfirmation(question: string, yesCallback: (() => void), noCallback?: (() => void)): number {
+	let response = dialog.showMessageBox({ type: "question", buttons: ["Yes", "No"], title: "Question", message: question});
+	if (response === 0) {
+		yesCallback();
+	} else if (response === 1) {
+		if (noCallback !== undefined)
+			noCallback();
+	}
+	return response;
 }
 
 /*function runTests() {
