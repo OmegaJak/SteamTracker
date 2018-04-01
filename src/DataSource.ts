@@ -135,7 +135,7 @@ export class MinecraftData implements DataSource {
 				let playtime: number = 0;
 				let lastPlayed: string = "Invalid Date";
 				if (totalPlaytimeMatches !== null && lastPlayedMatches !== null) {
-					playtime = Number(totalPlaytimeMatches[1]) / 60;
+					playtime = Math.round(Number(totalPlaytimeMatches[1]) / 60);
 					if (isNaN(playtime))
 						playtime = 0;
 
