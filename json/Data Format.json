@@ -49,7 +49,7 @@ v0.3:
 {
 	"version": 0.3,
 	"lastRun": "2018-03-30T04:45:52.049Z",
-	"gameIDs": [ // Used to track non-steam appids
+	"idTracker": [ // Used to track non-steam appids
 		{
 			"numid": -1,
 			"strid": "Minecraft"

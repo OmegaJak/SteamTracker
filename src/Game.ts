@@ -11,11 +11,6 @@ export interface ScrapeData {
 	name: string;
 }
 
-export interface GameID {
-	strid: string;
-	numid: number;
-}
-
 export class PlaytimePoint {
 	date: string;
 	playtime: number;
@@ -64,6 +59,8 @@ export class Game {
 
 	public prepareForWrite() {
 		this.playtime2Weeks = undefined;
+		if (this.children !== undefined && this.children.length === 0)
+			this.children = undefined;
 	}
 
 	public setZero(date?: Date | string) {
