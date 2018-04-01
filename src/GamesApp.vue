@@ -175,7 +175,7 @@ export default {
       if (playtime > 60) {
         toReturn += Math.floor(playtime / 60) + "h ";
       }
-      toReturn += playtime % 60 + "m";
+      toReturn += Math.round(playtime % 60) + "m";
 
       return toReturn;
     },
