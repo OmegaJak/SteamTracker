@@ -10,7 +10,8 @@ import Vue from "Vue";
 import { PlaytimePoint, Game, ScrapeData, GameMap } from "./Game";
 import { HistoryFile } from "./HistoryFile";
 import Events from "./Events";
-import { SteamData } from "./DataSource";
+import { SteamData, MinecraftData, DataSource } from "./DataSource";
+import { IDTracker } from "./IDTracker";
 
 const isDevMode = process.execPath.match(/[\\/]electron/);
 console.log("isDevMode: " + (isDevMode !== null));
@@ -50,39 +51,57 @@ export class DataManager {
 
 				migrateData(file);
 
-				this.historyFile = new HistoryFile(parseGamesArray(file.games), file.version, file.lastRun);
+				this.historyFile = new HistoryFile(parseGamesArray(file.games), file.version, file.lastRun, file.gameIDs);
 			}
 
-			this.querySteam();
+			this.updateSources();
 		});
 
 		if (!isDevMode)
-			this.querySteam();
+			this.updateSources();
 	}
 
 	public writeHistory() {
 		jetpack.write(jsonPath + "Play History.json", this.historyFile.getWriteableObject());
 	}
 
-	private async querySteam() {
-		this.eventBus.$emit(Events.fetchingData, true, "Fetching Steam Data...");
-		console.log("Querying Steam...");
-
-		let steamData: GameMap = await new SteamData().getData();
-		this.updateData(steamData);
+	private async updateSources() {
+		await this.updateFromSrc(new SteamData(), "Fetching Steam Data...");
+		await this.updateFromSrc(new MinecraftData("C:/Users/JAK/MultiMC/instances", this.historyFile.idTracker),
+									"Updating Minecraft Data...");
 
 		console.timeEnd("mainUpdate");
 	}
 
-	private updateData(newData: GameMap) {
+	private async updateFromSrc(src: DataSource, updateMsg: string) {
+		this.eventBus.$emit(Events.fetchingData, true, updateMsg);
+		console.log(updateMsg);
+
+		let data: GameMap = await src.getData();
+
+		// TODO: This is only a temporary hack until a more generalized solution is implemented.
+		// Because MinecraftData only returns a GameMap with minecraft in it, the current implementation
+		// would think that all other games had been removed if this wasn't done.
+		/* if (src instanceof MinecraftData) {
+			let minecraft = Array.from(data.values())[0];
+			if (this.historyFile.games !== undefined) {
+				data = classToClass(this.historyFile.games);
+				data.set(minecraft.appid, minecraft);
+			}
+		} */
+		this.updateData(data, src.srcName);
+
+		this.eventBus.$emit(Events.fetchingData, false);
+	}
+
+	private updateData(newData: GameMap, dataSrc: string) {
 		if (this.historyFile.games === undefined) {
 			this.historyFile.games = initializeGames(newData);
 		} else {
-			this.historyFile.games = updateGameHistory(newData, this.historyFile.games, this.historyFile.lastRun);
+			this.historyFile.games = updateGameHistory(newData, this.historyFile.games, this.historyFile.lastRun, dataSrc);
 		}
 
 		this.eventBus.$emit(Events.gamesUpdated, this.historyFile.games);
-		this.eventBus.$emit(Events.fetchingData, false);
 
 		this.writeHistory();
 	}
@@ -100,16 +119,10 @@ function parseGamesArray(games): GameMap {
 		return gamesArr;
 	}
 
-	let toReturn: GameMap = new Map<number, Game>();
-
-	for (let game of convertToGamesArr(games)) {
-		toReturn.set(game.appid, game);
-	}
-
-	return toReturn;
+	return mapFromGames(convertToGamesArr(games));
 }
 
-function updateGameHistory(newGamesData: GameMap, oldGamesData: GameMap, lastRun: string): GameMap {
+function updateGameHistory(newGamesData: GameMap, oldGamesData: GameMap, lastRun: string, dataSrc: string): GameMap {
 	console.log("Updating data");
 
 	// if it finds an unplayed game, it should update the only date there to the current date
@@ -123,26 +136,46 @@ function updateGameHistory(newGamesData: GameMap, oldGamesData: GameMap, lastRun
 		console.log("Found a new game: " + newGame.name);
 		let oldGame = initGame(newGame);
 		oldGame.setZero(lastRun);
-		gameUpdateLogic(oldGame, newGame, lastRun, true);
+		updateGame(oldGame, newGame, lastRun, true, dataSrc);
 		oldGamesData.set(oldGame.appid, oldGame); // Don't think this is necessary
 	});
 
 	let responseGame: Game | undefined;
 	oldGamesData.forEach( (oldGame, appid) => {
-		responseGame = newGamesData.get(appid);
-		if (responseGame === undefined) {
-			if (oldGame.keep === undefined || !oldGame.keep) {
-				getConfirmation(oldGame.name + " has been removed from Steam. \n" + "Would you like to keep its data anyway?",
-								() => {
-									oldGame.keep = true;
-									gameUpdateLogic(oldGame, oldGame, lastRun, false);
-								}, () => { oldGamesData.delete(appid); });
+		if ((oldGame.source === undefined && dataSrc === "Steam") || oldGame.source === dataSrc) {
+			responseGame = newGamesData.get(appid);
+			if (responseGame === undefined) {
+				if (oldGame.keep === undefined || !oldGame.keep) {
+					getConfirmation(oldGame.name + " has been removed. \n" + "Would you like to keep its data anyway?",
+									() => { oldGame.keep = true; updateGame(oldGame, oldGame, lastRun, false, dataSrc); },
+									() => { oldGamesData.delete(appid); });
+				}
+			} else {
+				updateGame(oldGame, responseGame, lastRun, false, dataSrc);
 			}
-		} else {
-			gameUpdateLogic(oldGame, responseGame, lastRun, false);
 		}
 	});
 	return oldGamesData;
+}
+
+function updateGame(oldGame: Game, newGame: Game, lastRun: string, isNewGame: boolean, dataSrc: string) {
+	function helper(children?: Game[]): GameMap {
+		return children !== undefined ? mapFromGames(children) : new Map<number, Game>();
+	}
+
+	gameUpdateLogic(oldGame, newGame, lastRun, isNewGame);
+
+	let oldMap = helper(oldGame.children);
+	let newMap = helper(newGame.children);
+
+	if (oldMap.size > 0 || newMap.size > 0) {
+		// The dataSrc is set to the default of "Steam" because it isn't necessary for children.
+		// If we're comparing children, they must be from the same parent, and two versions of the same
+		// parent are obviously from the same source.
+		oldGame.children = Array.from(updateGameHistory(newMap, oldMap, lastRun, "Steam").values());
+		if (oldGame.children.length === 0)
+			oldGame.children = undefined;
+	}
 }
 
 function gameUpdateLogic(oldGame: Game, responseGame: Game, mostRecentDate: string, isNewGame: boolean) {
@@ -188,7 +221,7 @@ function gameUpdateLogic(oldGame: Game, responseGame: Game, mostRecentDate: stri
 
 function updateOtherProperties(newGame: Game, oldGame: Game) {
 	Object.keys(newGame).forEach(key => {
-		if (key !== "playtimeHistory" && newGame[key] !== undefined) {
+		if (key !== "playtimeHistory" && key !== "children" && newGame[key] !== undefined) {
 			if (oldGame[key] !== undefined && newGame[key] !== oldGame[key]) {
 				if (key === "lastPlayed" || key === "totalPlaytime") {
 					oldGame[key] = newGame[key];
@@ -222,6 +255,15 @@ function lastPlayed(game: Game, otherwise = new Date()): Date {
 	}
 }
 
+function mapFromGames(games: Game[]): GameMap {
+	let map = new Map<number, Game>();
+	for (let game of games) {
+		map.set(game.appid, game);
+	}
+
+	return map;
+}
+
 function initializeGames(srcData: GameMap): GameMap {
 	let newGames: GameMap = new Map<number, Game>();
 
@@ -241,6 +283,13 @@ function initGame(game: Game) {
 	let toReturn: Game = classToClass(game);
 	toReturn.playtimeHistory = [];
 	toReturn.totalPlaytime = 0;
+	if (game.children !== undefined) {
+		let newChildren: Game[] = [];
+		for (let child of game.children) {
+			newChildren.push(initGame(child));
+		}
+		toReturn.children = newChildren;
+	}
 
 	return toReturn;
 }

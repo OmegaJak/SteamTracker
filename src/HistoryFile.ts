@@ -1,10 +1,11 @@
-import { Game, ScrapeData, GameMap, PlaytimePoint, GameID } from "./Game";
+import { Game, ScrapeData, GameMap, PlaytimePoint } from "./Game";
+import { IDTracker, GameID } from "./IDTracker";
 import { classToClass } from "class-transformer";
 
 export class HistoryFile {
 	version?: number;
 	lastRun: string;
-	gameIDs?: GameID[];
+	idTracker: IDTracker;
 	games?: GameMap;
 
 	private scrapeDataTemp: ScrapeData[] | undefined;
@@ -13,7 +14,7 @@ export class HistoryFile {
 	constructor(games?: GameMap, version?: number, lastRun?: string, gameIDs?: GameID[]) {
 		this.games = games;
 		this.version = version;
-		this.gameIDs = gameIDs;
+		this.idTracker = new IDTracker(gameIDs);
 
 		if (lastRun !== undefined) {
 			this.lastRun = lastRun;
@@ -37,14 +38,14 @@ export class HistoryFile {
 		if (gamesCopy === undefined)
 			throw new Error("Somehow the historyFile games is still undefined by write time.");
 
-		gamesCopy.forEach( game => {
-			game.playtime2Weeks = undefined;
+		gamesCopy.forEach( (game, appid) => {
+			game.prepareForWrite();
 		});
 
 		return {
 			version: this.version,
 			lastRun: new Date().toISOString(),
-			gameIDs: this.gameIDs,
+			idTracker: this.idTracker ? this.idTracker.gameIDs : undefined,
 			games: Array.from(gamesCopy.values()),
 		};
 	}
