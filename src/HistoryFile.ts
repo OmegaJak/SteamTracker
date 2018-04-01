@@ -1,17 +1,19 @@
-import { Game, ScrapeData, GameMap, PlaytimePoint } from "./Game";
+import { Game, ScrapeData, GameMap, PlaytimePoint, GameID } from "./Game";
 import { classToClass } from "class-transformer";
 
 export class HistoryFile {
 	version?: number;
-	games?: GameMap;
 	lastRun: string;
+	gameIDs?: GameID[];
+	games?: GameMap;
 
 	private scrapeDataTemp: ScrapeData[] | undefined;
 	private gamesResponseTemp: GameMap | undefined;
 
-	constructor(games?: GameMap, version?: number, lastRun?: string) {
+	constructor(games?: GameMap, version?: number, lastRun?: string, gameIDs?: GameID[]) {
 		this.games = games;
 		this.version = version;
+		this.gameIDs = gameIDs;
 
 		if (lastRun !== undefined) {
 			this.lastRun = lastRun;
@@ -42,6 +44,7 @@ export class HistoryFile {
 		return {
 			version: this.version,
 			lastRun: new Date().toISOString(),
+			gameIDs: this.gameIDs,
 			games: Array.from(gamesCopy.values()),
 		};
 	}

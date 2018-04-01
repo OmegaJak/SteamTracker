@@ -22,7 +22,7 @@ if (isDevMode) {
 }
 
 const dataFilePath = "Play History.json";
-const CurrentFileVersion: number = 0.2;
+const CurrentFileVersion: number = 0.3;
 
 export class DataManager {
 	public historyFile: HistoryFile;
@@ -74,7 +74,7 @@ export class DataManager {
 		console.timeEnd("mainUpdate");
 	}
 
-	private updateData(newData: Map<number, Game>) {
+	private updateData(newData: GameMap) {
 		if (this.historyFile.games === undefined) {
 			this.historyFile.games = initializeGames(newData);
 		} else {
@@ -89,14 +89,20 @@ export class DataManager {
 }
 
 function parseGamesArray(games): GameMap {
+	function convertToGamesArr(rawArr: any): Game[] {
+		let gamesArr = deserializeArray(Game, JSON.stringify(rawArr));
+
+		for (let game of gamesArr) {
+			if (game.children !== undefined)
+				game.children = convertToGamesArr(game.children);
+		}
+
+		return gamesArr;
+	}
+
 	let toReturn: GameMap = new Map<number, Game>();
 
-	let gamesArr = deserializeArray(Game, JSON.stringify(games));
-
-	for (let game of gamesArr) {
-		if (game.children !== undefined) {
-			game.children = parseGamesArray(game.children);
-		}
+	for (let game of convertToGamesArr(games)) {
 		toReturn.set(game.appid, game);
 	}
 
@@ -256,6 +262,8 @@ function migrateData(file) { // TODO: Investigate whether this is still valid
 				game.img_logo_url = undefined;
 			}
 		}
+
+		// Nothing necessary for 0.2 -> 0.3
 	}
 }
 
