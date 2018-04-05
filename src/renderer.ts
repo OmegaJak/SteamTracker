@@ -142,16 +142,18 @@ function updateGameHistory(newGamesData: GameMap, oldGamesData: GameMap, lastRun
 
 	let responseGame: Game | undefined;
 	oldGamesData.forEach( (oldGame, appid) => {
-		if ((oldGame.source === undefined && dataSrc === "Steam") || oldGame.source === dataSrc) {
-			responseGame = newGamesData.get(appid);
-			if (responseGame === undefined) {
-				if (oldGame.keep === undefined || !oldGame.keep) {
-					getConfirmation(oldGame.name + " has been removed. \n" + "Would you like to keep its data anyway?",
-									() => { oldGame.keep = true; updateGame(oldGame, oldGame, lastRun, false, dataSrc); },
-									() => { oldGamesData.delete(appid); });
+		if (!oldGame.ignored) {
+			if ((oldGame.source === undefined && dataSrc === "Steam") || oldGame.source === dataSrc) {
+				responseGame = newGamesData.get(appid);
+				if (responseGame === undefined) {
+					if (oldGame.keep === undefined || !oldGame.keep) {
+						getConfirmation(oldGame.name + " has been removed. \n" + "Would you like to keep its data anyway?",
+										() => { oldGame.keep = true; updateGame(oldGame, oldGame, lastRun, false, dataSrc); },
+										() => { oldGamesData.delete(appid); });
+					}
+				} else {
+					updateGame(oldGame, responseGame, lastRun, false, dataSrc);
 				}
-			} else {
-				updateGame(oldGame, responseGame, lastRun, false, dataSrc);
 			}
 		}
 	});

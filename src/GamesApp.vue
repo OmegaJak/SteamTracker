@@ -131,16 +131,18 @@ export default {
       let responseGames: GameMap = response;
       this.tableData = [];
       responseGames.forEach( game => {
-        this.tableData.push({
-          appid: game.appid,
-          image: "http://media.steampowered.com/steamcommunity/public/images/apps/" + game.appid + "/" + game.logoURL + ".jpg",
-          name: game.name,
-          playtime: game.totalPlaytime,
-          cost: formatDollars(game.spent === undefined ? "" : String(game.spent)),
-          costPerHr: "",
-          lastPlayed: game.lastPlayed ? new Date(game.lastPlayed).valueOf() : 0,
-          rating: "",
-        });
+        if (!game.ignored) {
+          this.tableData.push({
+            appid: game.appid,
+            image: "http://media.steampowered.com/steamcommunity/public/images/apps/" + game.appid + "/" + game.logoURL + ".jpg",
+            name: game.name,
+            playtime: game.totalPlaytime,
+            cost: formatDollars(game.spent === undefined ? "" : String(game.spent)),
+            costPerHr: "",
+            lastPlayed: game.lastPlayed ? new Date(game.lastPlayed).valueOf() : 0,
+            rating: "",
+          });
+        }
       });
     });
     EventBus.$on(Events.costUpdated, (appid, cost) => {
