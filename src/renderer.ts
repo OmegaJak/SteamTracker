@@ -10,8 +10,10 @@ import Vue from "Vue";
 import { PlaytimePoint, Game, ScrapeData, GameMap } from "./Game";
 import { HistoryFile } from "./HistoryFile";
 import Events from "./Events";
-import { SteamData, MinecraftData, DataSource } from "./DataSource";
 import { IDTracker } from "./IDTracker";
+import SteamData from "./datasource/SteamSource";
+import MinecraftData from "./datasource/MinecraftSource";
+import DataSource from "./datasource/DataSource";
 
 const isDevMode = process.execPath.match(/[\\/]electron/);
 console.log("isDevMode: " + (isDevMode !== null));
