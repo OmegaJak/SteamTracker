@@ -52,13 +52,11 @@ export class DataManager {
 				migrateData(file);
 
 				this.historyFile = new HistoryFile(parseGamesArray(file.games), file.version, file.lastRun, file.gameIDs);
+				this.historyFile.version = CurrentFileVersion;
 			}
 
 			this.updateSources();
 		});
-
-		if (!isDevMode)
-			this.updateSources();
 	}
 
 	public writeHistory() {
