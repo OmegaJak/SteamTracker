@@ -77,19 +77,20 @@ export class DataManager {
 		this.eventBus.$emit(Events.fetchingData, true, updateMsg);
 		console.log(updateMsg);
 
-		let data: GameMap = await src.getData();
+		try {
+			let data: GameMap = await src.getData();
 
-		// TODO: This is only a temporary hack until a more generalized solution is implemented.
-		// Because MinecraftData only returns a GameMap with minecraft in it, the current implementation
-		// would think that all other games had been removed if this wasn't done.
-		/* if (src instanceof MinecraftData) {
-			let minecraft = Array.from(data.values())[0];
-			if (this.historyFile.games !== undefined) {
-				data = classToClass(this.historyFile.games);
-				data.set(minecraft.appid, minecraft);
+			this.updateData(data, src.srcName);
+		} catch (e) {
+			let msg: string = "Unknown Error...";
+			if (e instanceof Error) {
+				msg = (e as Error).message;
+			} else if (typeof e === typeof msg) {
+				msg = e as string;
 			}
-		} */
-		this.updateData(data, src.srcName);
+
+			dialog.showErrorBox(`There was an error while ${ updateMsg.replace("...", "").toLowerCase() }`, msg);
+		}
 
 		this.eventBus.$emit(Events.fetchingData, false);
 	}

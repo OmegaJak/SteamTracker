@@ -44,8 +44,11 @@ export default class MinecraftData implements DataSource {
 	private async getChildren(): Promise<Game[]> {
 		let children: Game[] = [];
 		let instances = await this.jet.listAsync();
+		let success = false;
 		for (let dirname of instances) {
-			if (this.jet.exists(this.jet.cwd() + "/" + dirname + "/instance.cfg")) {
+			let fileLocation: string = this.jet.cwd() + "/" + dirname + "/instance.cfg";
+			if (this.jet.exists(fileLocation)) {
+				success = true;
 				let instanceCfg: string = await this.jet.readAsync(this.jet.cwd() + "/" + dirname + "/instance.cfg");
 				let totalPlaytimeMatches = instanceCfg.match(/totalTimePlayed=(\d*)\n/);
 				let lastPlayedMatches = instanceCfg.match(/lastLaunchTime=(\d*)\n/);
@@ -68,6 +71,9 @@ export default class MinecraftData implements DataSource {
 				children.push(newChild);
 			}
 		}
+
+		if (!success)
+			throw new Error(`No MultiMC instance.cfg file could be found inside \"${this.jet.cwd()}\"`);
 
 		return children;
 	}
