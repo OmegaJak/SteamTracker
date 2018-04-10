@@ -1,2 +1,7 @@
 {
+	"files.exclude": {
+		"node_modules":true,
+		"out":true,
+		".vscode":true,
+	},
 }
