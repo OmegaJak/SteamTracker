@@ -19,7 +19,7 @@ export default class SteamData implements DataSource {
 
 				resolve(arg as ScrapeData[]);
 			});
-			setTimeout(reject, 10000); // If no scrape data has come back in 10 seconds, it probably failed
+			setTimeout(() => { reject("Scrape Data Timeout"); }, 10000); // If no scrape data has come back in 10 seconds, it probably failed
 		});
 	}
 
@@ -54,11 +54,13 @@ export default class SteamData implements DataSource {
 
 					resolve(responseGames);
 				} else {
-					reject();
+					reject("Bad API Response");
 				}
 			});
 			xhr.open("GET", url);
 			xhr.send();
+
+			setTimeout(() => { reject("API Query Timeout"); }, 10000);
 		});
 	}
 
