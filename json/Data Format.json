@@ -79,7 +79,9 @@ v0.3:
 				{
 					// The usual game properties, as above. Each is essentially a sub-game
 				}
-			]
+			],
+			// Remembers new values from sources that the user doesn't want to update to
+			"rememberedChoices": [ {"property":"name","newValues":["Worse name for Half-Life 2"]} ] 
 		}
 	]
 }

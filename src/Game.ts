@@ -21,6 +21,25 @@ export class PlaytimePoint {
 	}
 }
 
+export class Choice {
+	property: string; // The key of the property for which these new values should be ignored
+	newValues: string[]; // The new values to ignore when updating
+
+	constructor(property: string, newValues: string[]) {
+		this.property = property;
+		this.newValues = newValues;
+	}
+
+	public addValue(value: string) {
+		if (!this.newValues.includes(value))
+			this.newValues.push(value);
+	}
+
+	public includes(value: string) {
+		return this.newValues.includes(value);
+	}
+}
+
 export type GameMap = Map<number, Game>;
 
 export class Game {
@@ -45,6 +64,8 @@ export class Game {
 	keep?: boolean;
 	source?: string;
 	children?: Game[];
+	@Type(() => Choice)
+	rememberedChoices?: Choice[];
 
 	// Properties not stored
 	playtime2Weeks?: number;
@@ -82,5 +103,32 @@ export class Game {
 			dateStr = date.toISOString();
 
 		this.playtimeHistory.push(new PlaytimePoint(dateStr, time));
+	}
+
+	public rememberChoice(property: string, value: string) {
+		if (this.rememberedChoices === undefined) {
+			this.rememberedChoices = [new Choice(property, [value])];
+		} else {
+			for (let choice of this.rememberedChoices) {
+				if (choice.property === property) {
+					choice.addValue(value);
+					return;
+				}
+			}
+
+			// If it gets here, the property has no previous choices
+			this.rememberedChoices.push(new Choice(property, [value]));
+		}
+	}
+
+	public rememberedChoice(property: string, value: string) {
+		if (this.rememberedChoices === undefined)
+			return false;
+
+		let result = this.rememberedChoices.find(choice => {
+			return (choice.property === property) && choice.includes(value);
+		});
+
+		return (result !== undefined);
 	}
 }

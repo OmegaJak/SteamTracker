@@ -7,7 +7,7 @@ import { classToClass, plainToClass, deserializeArray } from "class-transformer"
 import jetpack = require("fs-jetpack");
 import Vue from "Vue";
 
-import { PlaytimePoint, Game, ScrapeData, GameMap } from "./Game";
+import { PlaytimePoint, Game, ScrapeData, GameMap, Choice } from "./Game";
 import { HistoryFile } from "./HistoryFile";
 import Events from "./Events";
 import { IDTracker } from "./IDTracker";
@@ -224,13 +224,21 @@ function gameUpdateLogic(oldGame: Game, responseGame: Game, mostRecentDate: stri
 
 function updateOtherProperties(newGame: Game, oldGame: Game) {
 	Object.keys(newGame).forEach(key => {
-		if (key !== "playtimeHistory" && key !== "children" && newGame[key] !== undefined) {
+		if (key !== "playtimeHistory" && key !== "children" && key !== "rememberedChoices" && newGame[key] !== undefined) {
 			if (oldGame[key] !== undefined && newGame[key] !== oldGame[key]) {
-				if (key === "lastPlayed" || key === "totalPlaytime") {
-					oldGame[key] = newGame[key];
-				} else {
-					getConfirmation(`Would you like to update the ${key} property of ${oldGame.name} from
-						"${oldGame[key]}" to "${newGame[key]}"?`, () => { oldGame[key] = newGame[key]; });
+				if (!oldGame.rememberedChoice(key, newGame[key])) { // If this choice has been made before, don't ask again
+					if (key === "lastPlayed" || key === "totalPlaytime") {
+						oldGame[key] = newGame[key];
+					} else {
+						getConfirmation(`Would you like to update the ${key} property of ${oldGame.name} from
+							"${oldGame[key]}" to "${newGame[key]}"?`,
+							() => {
+								oldGame[key] = newGame[key];
+							},
+							() => {
+								oldGame.rememberChoice(key, newGame[key]);
+							});
+					}
 				}
 			} else {
 				oldGame[key] = newGame[key];
