@@ -6,6 +6,7 @@ import { addDays, differenceInDays, differenceInMinutes, subMinutes, subDays } f
 import { classToClass, plainToClass, deserializeArray } from "class-transformer";
 import jetpack = require("fs-jetpack");
 import Vue from "Vue";
+import Swal from "sweetalert2";
 
 import { PlaytimePoint, Game, ScrapeData, GameMap, Choice } from "./Game";
 import { HistoryFile } from "./HistoryFile";
@@ -14,6 +15,7 @@ import { IDTracker } from "./IDTracker";
 import SteamData from "./datasource/SteamSource";
 import MinecraftData from "./datasource/MinecraftSource";
 import DataSource from "./datasource/DataSource";
+import GaugepoweredCSV from "./datasource/GaugepoweredCSV";
 
 const isDevMode = process.execPath.match(/[\\/]electron/);
 console.log("isDevMode: " + (isDevMode !== null));
@@ -59,11 +61,46 @@ export class DataManager {
 
 			this.updateSources();
 		});
+
+		ipcRenderer.on("importGauge", () => { this.getGaugePoweredData(); });
 	}
 
 	public writeHistory() {
 		jetpack.write(jsonPath + "Play History.json", this.historyFile.getWriteableObject());
 	}
+
+	public async getGaugePoweredData() {
+		this.eventBus.$emit(Events.fetchingData, true, "Importing GaugePowered CSV...");
+
+		async function promptForPath(): Promise<string> {
+			return new Promise<string>( (resolve, reject) => {
+				let paths = dialog.showOpenDialog(remote.getCurrentWindow(),
+					{
+						title: "GaugePowered CSV Location",
+						filters: [
+							{name: "Custom File Type", extensions: ["csv"]},
+						],
+						properties: ["openFile"],
+					});
+				if (paths === undefined) {
+					reject();
+				} else {
+					resolve(paths[0]);
+				}
+			});
+		}
+
+		let path = await promptForPath();
+
+		await (new GaugepoweredCSV(path, this)).updateData();
+
+		this.eventBus.$emit(Events.gamesUpdated, this.historyFile.games);
+		this.eventBus.$emit(Events.fetchingData, false);
+
+		this.writeHistory();
+	}
+
+	public updateProperties(newGame: Game, oldGame: Game) { updateOtherProperties(newGame, oldGame); }
 
 	private async updateSources() {
 		await this.updateFromSrc(new SteamData(), "Fetching Steam Data...");
