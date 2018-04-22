@@ -38,6 +38,9 @@ const createWindow = async () => {
 		// when you should delete the corresponding element.
 		mainWindow = null;
 	});
+
+	var test = require("./menu/mainmenu");
+	test.mainWindow = mainWindow;
 };
 
 function createLastPlayedWindow() {
