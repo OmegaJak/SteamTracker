@@ -81,7 +81,7 @@ export default class GaugepoweredCSV {
 							let oldGame = this.dataMan.historyFile.games!.get(id);
 							if (oldGame !== undefined) {
 								csvGame.name = oldGame.name;
-								updateThings(csvGame, oldGame, i, this.dataMan);
+								await updateThings(csvGame, oldGame, i, this.dataMan);
 							}
 
 							break;
@@ -152,15 +152,15 @@ export default class GaugepoweredCSV {
 			});
 		}
 
-		function updateThings(newGame: Game, oldGame: Game, index: number, dataMan: DataManager) {
-			dataMan.updateProperties(newGame, oldGame);
+		async function updateThings(newGame: Game, oldGame: Game, index: number, dataMan: DataManager) {
+			await dataMan.updateProperties(newGame, oldGame);
 
 			data.splice(index, 1);
 		}
 
-		function confirmUpdate(possibility: Possibility, dataMan: DataManager) {
+		async function confirmUpdate(possibility: Possibility, dataMan: DataManager) {
 			possibility.csvGame.name = possibility.storedGame.name;
-			updateThings(possibility.csvGame, possibility.storedGame, possibility.index, dataMan);
+			await updateThings(possibility.csvGame, possibility.storedGame, possibility.index, dataMan);
 		}
 	}
 }

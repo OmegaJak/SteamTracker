@@ -4,7 +4,6 @@ const dialog = remote.dialog;
 import { ipcRenderer } from "electron";
 import { addDays, differenceInDays, differenceInMinutes, subMinutes, subDays } from "date-fns";
 import { classToClass, plainToClass, deserializeArray } from "class-transformer";
-import jetpack = require("fs-jetpack");
 import Vue from "Vue";
 import Swal from "sweetalert2";
 
@@ -34,18 +33,20 @@ export class DataManager {
 
 	private eventBus: Vue;
 	private rawFile: any;
+	private jetpack;
 
 	constructor(bus: Vue) {
 		this.eventBus = bus;
 		this.historyFile = new HistoryFile();
 		this.historyFile.version = CurrentFileVersion;
+		this.jetpack = require("fs-jetpack");
 	}
 
 	public onReady() {
 		console.time("mainUpdate");
 		console.time("readFile");
 		this.eventBus.$emit(Events.fetchingData, true, "Reading File on Disk...");
-		jetpack.readAsync(jsonPath + "Play History.json", "json")
+		this.jetpack.readAsync(jsonPath + "Play History.json", "json")
 		.then( file => {
 			console.timeEnd("readFile");
 			this.rawFile = file;
@@ -66,7 +67,7 @@ export class DataManager {
 	}
 
 	public writeHistory() {
-		jetpack.write(jsonPath + "Play History.json", this.historyFile.getWriteableObject());
+		this.jetpack.write(jsonPath + "Play History.json", this.historyFile.getWriteableObject());
 	}
 
 	public async getGaugePoweredData() {
@@ -100,7 +101,7 @@ export class DataManager {
 		this.writeHistory();
 	}
 
-	public updateProperties(newGame: Game, oldGame: Game) { updateOtherProperties(newGame, oldGame); }
+	public async updateProperties(newGame: Game, oldGame: Game) { await updateOtherProperties(newGame, oldGame); }
 
 	private async updateSources() {
 		await this.updateFromSrc(new SteamData(), "Fetching Steam Data...");
@@ -117,7 +118,7 @@ export class DataManager {
 		try {
 			let data: GameMap = await src.getData();
 
-			this.updateData(data, src.srcName);
+			await this.updateData(data, src.srcName);
 		} catch (e) {
 			let msg: string = "Unknown Error...";
 			if (e instanceof Error) {
@@ -132,11 +133,11 @@ export class DataManager {
 		this.eventBus.$emit(Events.fetchingData, false);
 	}
 
-	private updateData(newData: GameMap, dataSrc: string) {
+	private async updateData(newData: GameMap, dataSrc: string) {
 		if (this.historyFile.games === undefined) {
-			this.historyFile.games = initializeGames(newData);
+			this.historyFile.games = await initializeGames(newData);
 		} else {
-			this.historyFile.games = updateGameHistory(newData, this.historyFile.games, this.historyFile.lastRun, dataSrc);
+			this.historyFile.games = await updateGameHistory(newData, this.historyFile.games, this.historyFile.lastRun, dataSrc);
 		}
 
 		this.eventBus.$emit(Events.gamesUpdated, this.historyFile.games);
@@ -160,7 +161,7 @@ function parseGamesArray(games): GameMap {
 	return mapFromGames(convertToGamesArr(games));
 }
 
-function updateGameHistory(newGamesData: GameMap, oldGamesData: GameMap, lastRun: string, dataSrc: string): GameMap {
+async function updateGameHistory(newGamesData: GameMap, oldGamesData: GameMap, lastRun: string, dataSrc: string): Promise<GameMap> {
 	console.log("Updating data");
 
 	// if it finds an unplayed game, it should update the only date there to the current date
@@ -170,40 +171,40 @@ function updateGameHistory(newGamesData: GameMap, oldGamesData: GameMap, lastRun
 		return !oldGamesData.has(game.appid);
 	});
 
-	newGames.forEach(newGame => {
+	for (let newGame of newGames) {
 		console.log("Found a new game: " + newGame.name);
 		let oldGame = initGame(newGame);
 		oldGame.setZero(lastRun);
-		updateGame(oldGame, newGame, lastRun, true, dataSrc);
+		await updateGame(oldGame, newGame, lastRun, true, dataSrc);
 		oldGamesData.set(oldGame.appid, oldGame); // Don't think this is necessary
-	});
+	}
 
 	let responseGame: Game | undefined;
-	oldGamesData.forEach( (oldGame, appid) => {
+	for (let [appid, oldGame] of Array.from(oldGamesData)) {
 		if (!oldGame.ignored) {
 			if ((oldGame.source === undefined && dataSrc === "Steam") || oldGame.source === dataSrc) {
 				responseGame = newGamesData.get(appid);
 				if (responseGame === undefined) {
 					if (oldGame.keep === undefined || !oldGame.keep) {
-						getConfirmation(oldGame.name + " has been removed. \n" + "Would you like to keep its data anyway?",
-										() => { oldGame.keep = true; updateGame(oldGame, oldGame, lastRun, false, dataSrc); },
+						await getConfirmation(oldGame.name + " has been removed. \n" + "Would you like to keep its data anyway?",
+										async () => { oldGame.keep = true; await updateGame(oldGame, oldGame, lastRun, false, dataSrc); },
 										() => { oldGamesData.delete(appid); });
 					}
 				} else {
-					updateGame(oldGame, responseGame, lastRun, false, dataSrc);
+					await updateGame(oldGame, responseGame, lastRun, false, dataSrc);
 				}
 			}
 		}
-	});
+	}
 	return oldGamesData;
 }
 
-function updateGame(oldGame: Game, newGame: Game, lastRun: string, isNewGame: boolean, dataSrc: string) {
+async function updateGame(oldGame: Game, newGame: Game, lastRun: string, isNewGame: boolean, dataSrc: string) {
 	function helper(children?: Game[]): GameMap {
 		return children !== undefined ? mapFromGames(children) : new Map<number, Game>();
 	}
 
-	gameUpdateLogic(oldGame, newGame, lastRun, isNewGame);
+	await gameUpdateLogic(oldGame, newGame, lastRun, isNewGame);
 
 	let oldMap = helper(oldGame.children);
 	let newMap = helper(newGame.children);
@@ -212,13 +213,13 @@ function updateGame(oldGame: Game, newGame: Game, lastRun: string, isNewGame: bo
 		// The dataSrc is set to the default of "Steam" because it isn't necessary for children.
 		// If we're comparing children, they must be from the same parent, and two versions of the same
 		// parent are obviously from the same source.
-		oldGame.children = Array.from(updateGameHistory(newMap, oldMap, lastRun, "Steam").values());
+		oldGame.children = Array.from((await updateGameHistory(newMap, oldMap, lastRun, "Steam")).values());
 		if (oldGame.children.length === 0)
 			oldGame.children = undefined;
 	}
 }
 
-function gameUpdateLogic(oldGame: Game, responseGame: Game, mostRecentDate: string, isNewGame: boolean) {
+async function gameUpdateLogic(oldGame: Game, responseGame: Game, mostRecentDate: string, isNewGame: boolean) {
 	let now = new Date();
 
 	if (isNewGame && responseGame.playtime2Weeks) {
@@ -244,11 +245,11 @@ function gameUpdateLogic(oldGame: Game, responseGame: Game, mostRecentDate: stri
 					oldGame.addHistPoint(subDays(now, 14), timePreTwoWeeksAgo);
 				}
 				// The min below handles all cases: when diff < 2weeks, diff = 2weeks, diff > 2weeks. Necessary because this path is taken by new games
-				determineChunkage(oldGame, responseGame, mostRecentDate, Math.min(diff, responseGame.playtime2Weeks));
+				await determineChunkage(oldGame, responseGame, mostRecentDate, Math.min(diff, responseGame.playtime2Weeks));
 				oldGame.addHistPoint(lastPlayed(responseGame), responseGame.playtime2Weeks);
 			}
 		} else { // It's been less than two weeks since the last update
-			determineChunkage(oldGame, responseGame, mostRecentDate, diff);
+			await determineChunkage(oldGame, responseGame, mostRecentDate, diff);
 			oldGame.addHistPoint(lastPlayed(responseGame), diff); // Then the difference must be entirely between the last update and the last played date
 		}
 		oldGame.setZero(now);
@@ -256,18 +257,18 @@ function gameUpdateLogic(oldGame: Game, responseGame: Game, mostRecentDate: stri
 		oldGame.setZero(now);
 	}
 
-	updateOtherProperties(responseGame, oldGame);
+	await updateOtherProperties(responseGame, oldGame);
 }
 
-function updateOtherProperties(newGame: Game, oldGame: Game) {
-	Object.keys(newGame).forEach(key => {
+async function updateOtherProperties(newGame: Game, oldGame: Game) {
+	for (let key of Object.keys(newGame)) {
 		if (key !== "playtimeHistory" && key !== "children" && key !== "rememberedChoices" && newGame[key] !== undefined) {
 			if (oldGame[key] !== undefined && newGame[key] !== oldGame[key]) {
 				if (!oldGame.rememberedChoice(key, newGame[key])) { // If this choice has been made before, don't ask again
 					if (key === "lastPlayed" || key === "totalPlaytime") {
 						oldGame[key] = newGame[key];
 					} else {
-						getConfirmation(`Would you like to update the ${key} property of ${oldGame.name} from
+						await getConfirmation(`Would you like to update the ${key} property of ${oldGame.name} from
 							"${oldGame[key]}" to "${newGame[key]}"?`,
 							() => {
 								oldGame[key] = newGame[key];
@@ -281,13 +282,13 @@ function updateOtherProperties(newGame: Game, oldGame: Game) {
 				oldGame[key] = newGame[key];
 			}
 		}
-	});
+	}
 }
 
-function determineChunkage(oldGame: Game, responseGame: Game, mostRecentDate: string, diff: number) { // May or may not support updates mid-game
+async function determineChunkage(oldGame: Game, responseGame: Game, mostRecentDate: string, diff: number) { // May or may not support updates mid-game
 	let prePlay = subMinutes(lastPlayed(responseGame), diff); // Basically the time when the game would've been started had the recent playtime been in one chunk
 	if (Math.abs(differenceInMinutes(prePlay, mostRecentDate)) > 5) { // If it had been over 5 minutes between when the game was last checked and it was theoretically started
-		getConfirmation("Was the recent " + diff + " minutes of " + responseGame.name + " in one chunk?\n" +
+		await getConfirmation("Was the recent " + diff + " minutes of " + responseGame.name + " in one chunk?\n" +
 						" (it was last played on " + lastPlayed(responseGame).toLocaleString() + ")", () => {
 							// Bring the zero up to just before the game would've been started
 							oldGame.setZero(prePlay);
@@ -312,17 +313,18 @@ function mapFromGames(games: Game[]): GameMap {
 	return map;
 }
 
-function initializeGames(srcData: GameMap): GameMap {
+async function initializeGames(srcData: GameMap)/* : Promise<GameMap> */ {
 	let newGames: GameMap = new Map<number, Game>();
 
-	srcData.forEach( game => {
+	for (let [appid, game] of Array.from(srcData)) {
+		console.log(game.name);
 		let oldGame: Game = initGame(game);
 
 		game.playtimeHistory = [];
 
-		gameUpdateLogic(oldGame, game, subDays(new Date(), 100).toISOString(), true);
+		await gameUpdateLogic(oldGame, game, subDays(new Date(), 100).toISOString(), true);
 		newGames.set(oldGame.appid, oldGame);
-	});
+	}
 
 	return newGames;
 }
@@ -364,15 +366,28 @@ function migrateData(file) { // TODO: Investigate whether this is still valid
 	}
 }
 
-function getConfirmation(question: string, yesCallback: (() => void), noCallback?: (() => void)): number {
-	let response = dialog.showMessageBox({ type: "question", buttons: ["Yes", "No"], title: "Question", message: question});
-	if (response === 0) {
-		yesCallback();
-	} else if (response === 1) {
-		if (noCallback !== undefined)
-			noCallback();
-	}
-	return response;
+async function getConfirmation(question: string, yesCallback: (() => void), noCallback?: (() => void)) {
+	let toReturn = false;
+	await Swal({
+		title: "Question",
+		text: question,
+		showConfirmButton: true,
+		showCancelButton: true,
+		confirmButtonText: "Yes",
+		cancelButtonText: "No",
+		allowOutsideClick: false,
+	}).then(result => {
+		if (result.value) { // Yes
+			yesCallback();
+			toReturn = true;
+		} else {
+			if (noCallback !== undefined)
+				noCallback();
+			toReturn = false;
+		}
+	});
+
+	return toReturn; // This makes it obvious to the type checker that this returns a Promise of a boolean
 }
 
 /*function runTests() {
