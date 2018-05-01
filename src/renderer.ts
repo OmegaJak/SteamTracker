@@ -267,7 +267,7 @@ async function updateOtherProperties(newGame: Game, oldGame: Game) {
 				if (!oldGame.rememberedChoice(key, newGame[key])) { // If this choice has been made before, don't ask again
 					if (key === "lastPlayed" || key === "totalPlaytime") {
 						oldGame[key] = newGame[key];
-					} else {
+					} else if (String(oldGame[key]) !== String(newGame[key])) {
 						await getConfirmation(`Would you like to update the ${key} property of ${oldGame.name} from
 							"${oldGame[key]}" to "${newGame[key]}"?`,
 							() => {
