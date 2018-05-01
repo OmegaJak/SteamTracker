@@ -26,7 +26,11 @@ export default {
 		filterInputs(event) {
 			let newValue = event.target.value;
 			if (event instanceof KeyboardEvent) {
-				newValue += event.key;
+				if (event.key !== "Enter") {
+					newValue += event.key;
+				} else {
+					this.updateCost();
+				}
 			} else if (event instanceof ClipboardEvent) {
 				newValue += event.clipboardData.getData("text/plain");
 			}
