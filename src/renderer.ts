@@ -1,20 +1,16 @@
-import { remote } from "electron";
-const dialog = remote.dialog;
-
-import { ipcRenderer } from "electron";
-import { addDays, differenceInDays, differenceInMinutes, subMinutes, subDays } from "date-fns";
-import { classToClass, plainToClass, deserializeArray } from "class-transformer";
 import Vue from "Vue";
+import { classToClass, deserializeArray } from "class-transformer";
+import { differenceInDays, differenceInMinutes, subDays, subMinutes } from "date-fns";
+import { ipcRenderer, remote } from "electron";
 import Swal from "sweetalert2";
-
-import { PlaytimePoint, Game, ScrapeData, GameMap, Choice } from "./Game";
-import { HistoryFile } from "./HistoryFile";
 import Events from "./Events";
-import { IDTracker } from "./IDTracker";
-import SteamData from "./datasource/SteamSource";
-import MinecraftData from "./datasource/MinecraftSource";
+import { Game, GameMap } from "./Game";
+import { HistoryFile } from "./HistoryFile";
 import DataSource from "./datasource/DataSource";
 import GaugepoweredCSV from "./datasource/GaugepoweredCSV";
+import MinecraftData from "./datasource/MinecraftSource";
+import SteamData from "./datasource/SteamSource";
+const dialog = remote.dialog;
 
 const isDevMode = process.execPath.match(/[\\/]electron/);
 console.log("isDevMode: " + (isDevMode !== null));
@@ -22,7 +18,8 @@ let jsonPath = "";
 if (isDevMode) {
 	jsonPath = process.execPath.match(/.*[\\/]SteamTracker[\\/]/) + "json/";
 } else {
-	jsonPath = remote.app.getPath("documents") + "/SteamTracker/";
+	// jsonPath = remote.app.getPath("documents") + "/SteamTracker/";
+	jsonPath = "C:/Users/JAK/Documents/SteamTracker/";
 }
 
 const dataFilePath = "Play History.json";

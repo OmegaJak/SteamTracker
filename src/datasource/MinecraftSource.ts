@@ -1,8 +1,7 @@
-import { ipcRenderer } from "electron";
 import { jetpack } from "fs-jetpack";
-import { IDTracker, GameID } from "../IDTracker";
-import DataSource from "./DataSource";
 import { Game } from "../Game";
+import { IDTracker } from "../IDTracker";
+import DataSource from "./DataSource";
 
 export default class MinecraftData implements DataSource {
 	location: string;
