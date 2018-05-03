@@ -67,6 +67,8 @@ export class Game {
 	@Type(() => Choice)
 	rememberedChoices?: Choice[];
 
+	[key: string]: any; // To make noImplicitAny happy when indexing by keys
+
 	// Properties not stored
 	playtime2Weeks?: number;
 
