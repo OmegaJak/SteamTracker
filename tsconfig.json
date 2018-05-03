@@ -14,6 +14,7 @@
 		},
 		"lib":["dom","es7"],
 		"strictNullChecks": true,
-		"experimentalDecorators": true
+		"experimentalDecorators": true,
+		"noImplicitAny": true,
 	}
 }

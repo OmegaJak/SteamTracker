@@ -30,7 +30,7 @@ import EventBus from "./EventBus";
 import Events from "./Events";
 import { formatDollars } from "./SteamTrackerLib";
 // import CostInput = require("./CostInput.vue");
-import jetpack = require("fs-jetpack");
+const jetpack = require("fs-jetpack"); // tslint:disable-line
 import { Data } from "electron";
 
 export default {
@@ -70,9 +70,9 @@ export default {
         },
         descOrderColumns: ["playtime", "cost", "lastPlayed"],
         customSorting: {
-          cost: ascending => {
-            return (a, b) => {
-              function toNum(x) {
+          cost: (ascending: boolean) => {
+            return (a: any, b: any) => {
+              function toNum(x: any) {
                 return (x.cost === "" || x.cost === undefined) ? Number.NEGATIVE_INFINITY : Number(x.cost);
               }
 
@@ -85,8 +85,8 @@ export default {
                 return numA <= numB ? 1 : -1;
             };
           },
-          costPerHr: ascending => {
-            return (a, b) => {
+          costPerHr: (ascending: boolean) => {
+            return (a: any, b: any) => {
               let aCost = this.$refs.costPerHr.getCostPerHr(a.cost, a.playtime);
               let bCost = this.$refs.costPerHr.getCostPerHr(b.cost, b.playtime);
 
@@ -122,12 +122,12 @@ export default {
     CostPerHr: require("./CostPerHr.vue"),
   },
   watch: {
-    searchFilter(val) {
+    searchFilter(val: string) {
       this.$refs.table.setFilter(val);
     },
   },
   created() {
-    EventBus.$on(Events.gamesUpdated, response => {
+    EventBus.$on(Events.gamesUpdated, (response: any) => {
       let responseGames: GameMap = response;
       this.tableData = [];
       responseGames.forEach( game => {
@@ -145,13 +145,13 @@ export default {
         }
       });
     });
-    EventBus.$on(Events.costUpdated, (appid, cost) => {
-      this.tableData.forEach(data => {
+    EventBus.$on(Events.costUpdated, (appid: number, cost: string) => {
+      this.tableData.forEach((data: any) => {
         if (data.appid === appid)
           data.cost = cost;
       });
     });
-    EventBus.$on(Events.fetchingData, (isFetching, message) => {
+    EventBus.$on(Events.fetchingData, (isFetching: boolean, message: string) => {
       if (isFetching) {
         this.searchPlaceholder = message;
       } else {
@@ -163,7 +163,7 @@ export default {
     dataManager: DataManager,
   },
   methods: {
-    showGameData(props) {
+    showGameData(props: any) {
       let dataMan: DataManager = this.dataManager;
       alert(dataMan.historyFile.getGameHistory(props.row.appid));
       if (dataMan.historyFile.games !== undefined)
@@ -171,7 +171,7 @@ export default {
 
       console.log(props.row.lastPlayed);
     },
-    convertPlaytime(playtime) {
+    convertPlaytime(playtime: number) {
       // Converts the playtime from minutes to hours and minutes
       let toReturn = "";
       if (playtime > 60) {

@@ -30,7 +30,7 @@ export class DataManager {
 
 	private eventBus: Vue;
 	private rawFile: any;
-	private jetpack;
+	private jetpack: any;
 
 	constructor(bus: Vue) {
 		this.eventBus = bus;
@@ -44,7 +44,7 @@ export class DataManager {
 		console.time("readFile");
 		this.eventBus.$emit(Events.fetchingData, true, "Reading File on Disk...");
 		this.jetpack.readAsync(jsonPath + "Play History.json", "json")
-		.then( file => {
+		.then( (file: any) => {
 			console.timeEnd("readFile");
 			this.rawFile = file;
 
@@ -143,7 +143,7 @@ export class DataManager {
 	}
 }
 
-function parseGamesArray(games): GameMap {
+function parseGamesArray(games: any): GameMap {
 	function convertToGamesArr(rawArr: any): Game[] {
 		let gamesArr = deserializeArray(Game, JSON.stringify(rawArr));
 
@@ -342,7 +342,7 @@ function initGame(game: Game) {
 }
 
 // Migrates between save formats, if necessary
-function migrateData(file) { // TODO: Investigate whether this is still valid
+function migrateData(file: any) { // TODO: Investigate whether this is still valid
 	if (file.version !== CurrentFileVersion) {
 		if (!file.version) { // Migrate from 0.1 -> 0.2
 			file.version = 0.2;

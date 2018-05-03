@@ -14,7 +14,7 @@ export default {
 		};
 	},
 	watch: {
-		"data.cost"(newVal, oldVal) { // Accounts for external updating, like when sorted
+		"data.cost"(newVal: string, oldVal: string) { // Accounts for external updating, like when sorted
 			this.cost = newVal;
 		},
 	},
@@ -23,7 +23,7 @@ export default {
 		this.format();
 	},
 	methods: {
-		filterInputs(event) {
+		filterInputs(event: any) {
 			let newValue = event.target.value;
 			if (event instanceof KeyboardEvent) {
 				if (event.key !== "Enter") {

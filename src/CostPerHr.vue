@@ -6,10 +6,10 @@
 export default {
 	props: ["cost", "playtime"],
 	methods: {
-		format(val) {
+		format(val: string | number) {
 			if (val === String("-")) {
         return "-";
-      } else {
+      } else if (typeof val === "number") {
 				let decimal = val - Math.floor(val); // Remove integer portion
 
 				let intStr = String(val.toFixed(1)).split(".")[0]; // Get the integer portion

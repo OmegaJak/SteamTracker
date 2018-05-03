@@ -1,5 +1,4 @@
 import { classToClass } from "class-transformer";
-import { jetpack } from "fs-jetpack";
 import Swal from "sweetalert2";
 import { Game } from "../Game";
 import { DataManager } from "../renderer";
@@ -12,7 +11,7 @@ interface Possibility {
 
 export default class GaugepoweredCSV {
 	path: string;
-	jet: jetpack;
+	jet: any;
 	dataMan: DataManager;
 
 	constructor(path: string, dataMan: DataManager) {

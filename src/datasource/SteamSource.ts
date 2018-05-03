@@ -13,7 +13,7 @@ export default class SteamData implements DataSource {
 	private async getScrapeData() {
 		ipcRenderer.send("gamesScrapeRequest");
 		return new Promise<ScrapeData[]>((resolve, reject) => {
-			ipcRenderer.on("gamesScrapeResponse", (event, arg) => {
+			ipcRenderer.on("gamesScrapeResponse", (event: any, arg: ScrapeData[]) => {
 				console.log("Scrape response received:");
 				console.log(arg);
 

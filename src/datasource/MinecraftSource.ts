@@ -1,11 +1,10 @@
-import { jetpack } from "fs-jetpack";
 import { Game } from "../Game";
 import { IDTracker } from "../IDTracker";
 import DataSource from "./DataSource";
 
 export default class MinecraftData implements DataSource {
 	location: string;
-	jet: jetpack;
+	jet: any;
 	idTracker: IDTracker;
 
 	readonly srcName = "Minecraft";
