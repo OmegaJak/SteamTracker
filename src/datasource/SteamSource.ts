@@ -1,5 +1,5 @@
-import { ScrapeData, GameMap, Game } from "./../Game";
 import { ipcRenderer } from "electron";
+import { Game, GameMap, ScrapeData } from "./../Game";
 import DataSource from "./DataSource";
 
 export default class SteamData implements DataSource {

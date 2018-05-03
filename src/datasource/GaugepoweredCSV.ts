@@ -1,9 +1,8 @@
-import DataSource from "./DataSource";
-import { jetpack } from "fs-jetpack";
-import { GameMap, Game } from "../Game";
-import { DataManager } from "../renderer";
 import { classToClass } from "class-transformer";
+import { jetpack } from "fs-jetpack";
 import Swal from "sweetalert2";
+import { Game } from "../Game";
+import { DataManager } from "../renderer";
 
 interface Possibility {
 	csvGame: Game;

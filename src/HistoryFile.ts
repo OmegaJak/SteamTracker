@@ -1,6 +1,6 @@
-import { Game, ScrapeData, GameMap, PlaytimePoint } from "./Game";
-import { IDTracker, GameID } from "./IDTracker";
 import { classToClass } from "class-transformer";
+import { GameMap, ScrapeData } from "./Game";
+import { GameID, IDTracker } from "./IDTracker";
 
 export class HistoryFile {
 	version?: number;
