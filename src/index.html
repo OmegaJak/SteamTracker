@@ -1,32 +1,32 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
+	<head>
+		<meta charset="utf-8">
 
-    <link rel="stylesheet" type="text/css" href="css/base.css"/>
+		<link rel="stylesheet" type="text/css" href="css/base.css"/>
 
-    <title>SteamTracker</title>
-  </head>
-  <body>
-    <div id="app"></div>
-  </body>
+		<title>SteamTracker</title>
+	</head>
+	<body>
+		<div id="app"></div>
+	</body>
 
-  <script lang="ts">
-  import Vue from 'vue';
-  import { ClientTable, Event } from 'vue-tables-2';
-  import App from './App.vue';
-  import { DataManager } from './renderer';
-  import { EventManager } from './EventManager'
-  import EventBus from './EventBus';
+	<script lang="ts">
+	import Vue from 'vue';
+	import { ClientTable, Event } from 'vue-tables-2';
+	import App from './App.vue';
+	import { DataManager } from './renderer';
+	import { EventManager } from './EventManager'
+	import EventBus from './EventBus';
 
-  Vue.use(ClientTable, {}, false, 'bootstrap4', 'default');
+	Vue.use(ClientTable, {}, false, 'bootstrap4', 'default');
 
-  const dataManager = new DataManager(EventBus);
-  const eventManager = new EventManager(EventBus, dataManager);
+	const dataManager = new DataManager(EventBus);
+	const eventManager = new EventManager(EventBus, dataManager);
 
-  const app = new Vue(App);
-  app.$props.dataManager = dataManager;
-  app.$mount('#app');
+	const app = new Vue(App);
+	app.$props.dataManager = dataManager;
+	app.$mount('#app');
 
-  </script>
+	</script>
 </html>
