@@ -28,12 +28,13 @@ export default class SteamData implements DataSource {
 			"key=PUTYOURKEYHERE",
 			"steamid=PUTYOURIDHERE",
 			"format=json",
-			"include_appinfo=1",
-			"include_played_free_games=1",
+			"include_appinfo=true",
+			"include_played_free_games=true",
 		];
 
 		const params = fields.join("&");
 		const url = "http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?" + params;
+		console.log("GetOwnedGames Request: GET " + url);
 
 		return new Promise<GameMap>((resolve, reject) => {
 			const xhr = new XMLHttpRequest();
@@ -46,6 +47,10 @@ export default class SteamData implements DataSource {
 					let responseGames: GameMap = new Map<number, Game>();
 					let currentGame: Game;
 					for (const responseGame of response.response.games) {
+						if (responseGame.img_logo_url === undefined) {
+							// https://stackoverflow.com/a/54200977
+							responseGame.img_logo_url = `https://steamcdn-a.akamaihd.net/steam/apps/${responseGame.appid}/header.jpg`;
+						}
 						currentGame = new Game(responseGame.appid, responseGame.name, responseGame.playtime_forever, [], responseGame.img_logo_url);
 						currentGame.iconURL = responseGame.img_icon_url;
 						currentGame.playtime2Weeks = responseGame.playtime_2weeks;

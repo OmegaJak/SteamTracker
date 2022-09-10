@@ -93,7 +93,7 @@ export default class GaugepoweredCSV {
 					if (possibilities.length === 1) {
 						let question = `Are "<b>${possibilities[0].storedGame.name}</b>"(from Play History) and <b>"${possibilities[0].csvGame.name}"</b>
 										(from csv) the same game? (this was the only match [Play History -> CSV])`;
-						await Swal({
+						await Swal.fire({
 							html: question,
 							showConfirmButton: true,
 							showCancelButton: true,
@@ -111,7 +111,7 @@ export default class GaugepoweredCSV {
 						for (let i = 0; i < possibilities.length; i++) {
 							inputOpts.set(String(i), possibilities[i].csvGame.name);
 						}
-						await Swal({
+						await Swal.fire({
 							title: "Game Selection",
 							text: `Which of the following is the same game as "${storedGame.name}"? (from Playtime History)`,
 							input: "select",
@@ -144,7 +144,7 @@ export default class GaugepoweredCSV {
 				str += remaining[0] + "<br/>";
 			}
 			str += "</pre>";
-			Swal({
+			Swal.fire({
 				title: "Leftovers",
 				html: str,
 			});
