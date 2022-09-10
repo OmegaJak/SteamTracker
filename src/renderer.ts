@@ -21,6 +21,7 @@ if (isDevMode) {
 	// jsonPath = remote.app.getPath("documents") + "/SteamTracker/";
 	jsonPath = "C:/Users/JAK/Documents/SteamTracker/";
 }
+console.log("Using json at: " + jsonPath);
 
 const dataFilePath = "Play History.json";
 const CurrentFileVersion: number = 0.3;
@@ -53,7 +54,7 @@ export class DataManager {
 
 				migrateData(file);
 
-				this.historyFile = new HistoryFile(parseGamesArray(file.games), file.version, file.lastRun, file.gameIDs);
+				this.historyFile = new HistoryFile(parseGamesArray(file.games), file.version, file.lastRun, file.idTracker);
 				this.historyFile.version = CurrentFileVersion;
 			}
 
@@ -217,6 +218,11 @@ async function updateGame(oldGame: Game, newGame: Game, lastRun: string, isNewGa
 }
 
 async function gameUpdateLogic(oldGame: Game, responseGame: Game, mostRecentDate: string, isNewGame: boolean) {
+	await updateGamePlaytime(isNewGame, responseGame, oldGame, mostRecentDate);
+	await updateOtherProperties(responseGame, oldGame);
+}
+
+async function updateGamePlaytime(isNewGame: boolean, responseGame: Game, oldGame: Game, mostRecentDate: string) {
 	let now = new Date();
 
 	if (isNewGame && responseGame.playtime2Weeks) {
@@ -253,8 +259,6 @@ async function gameUpdateLogic(oldGame: Game, responseGame: Game, mostRecentDate
 	} else { // No playtime change
 		oldGame.setZero(now);
 	}
-
-	await updateOtherProperties(responseGame, oldGame);
 }
 
 async function updateOtherProperties(newGame: Game, oldGame: Game) {
