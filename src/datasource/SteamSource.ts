@@ -75,6 +75,8 @@ export default class SteamData implements DataSource {
 					game.playtime2Weeks = !isNaN(hours) ? hours : undefined;
 				}
 				// TODO: Examine why lastPlayed is stored as a string
+			} else if (game === undefined) {
+				console.log("game \"" + scrapedGame + "\" had no corresponding analogue in the API response");
 			}
 		});
 

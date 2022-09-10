@@ -66,7 +66,7 @@ export default class GaugepoweredCSV {
 					let subs = same || (storedName.length !== newName.length
 										&& (storedName.includes(newName) || newName.includes(storedName)));
 					if (same || subs) {
-						let csvGame = classToClass(storedGame);
+						let csvGame = classToClass(storedGame); // Deep copy
 						csvGame.name = name;
 						csvGame.spent = cost;
 						csvGame.rating = rating;

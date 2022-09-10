@@ -106,6 +106,8 @@ ipcMain.on("gamesScrapeResponse", (event, arg) => {
 	// event.sender.send('asynchronous-reply', 'pong')
 	console.log("Scrape response received, sending along to main window.");
 	mainWindow.webContents.send("gamesScrapeResponse", arg);
-	console.log("Closing LastPlayed window");
-	closeLastPlayedWindow();
+	setTimeout(() => {
+		console.log("Closing LastPlayed window");
+		closeLastPlayedWindow();
+	}, 3000);
 });
