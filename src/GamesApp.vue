@@ -3,7 +3,7 @@
 		<input id="game_search" v-model="searchFilter" type="text" :placeholder="searchPlaceholder" >
 		<v-client-table class="fixed_headers" ref="table" :columns="columns" :data="tableData" :options="options" :show-pagination="false">
 			<template slot="image" scope="props">
-				<img :src="props.row.image" @click="showGameData(props)">
+				<img :src="props.row.image" @click="showGameData(props)" height="75" width="160">
 			</template>
 			<template slot="playtime" scope="props">
 				{{ convertPlaytime(props.row.playtime) }}
@@ -134,7 +134,7 @@ export default {
 				if (!game.ignored) {
 					this.tableData.push({
 						appid: game.appid,
-						image: "http://media.steampowered.com/steamcommunity/public/images/apps/" + game.appid + "/" + game.logoURL + ".jpg",
+						image: game.logoURL,
 						name: game.name,
 						playtime: game.totalPlaytime,
 						cost: formatDollars(game.spent === undefined ? "" : String(game.spent)),

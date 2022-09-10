@@ -25,6 +25,7 @@ console.log("Using json at: " + jsonPath);
 
 const dataFilePath = "Play History.json";
 const CurrentFileVersion: number = 0.3;
+const autoConfirmedKeys: Set<string> = new Set<string>();
 
 export class DataManager {
 	public historyFile: HistoryFile;
@@ -269,14 +270,27 @@ async function updateOtherProperties(newGame: Game, oldGame: Game) {
 					if (key === "lastPlayed" || key === "totalPlaytime") {
 						oldGame[key] = newGame[key];
 					} else if (String(oldGame[key]) !== String(newGame[key])) {
-						await getConfirmation(`Would you like to update the ${key} property of ${oldGame.name} from
-							"${oldGame[key]}" to "${newGame[key]}"?`,
-							() => {
-								oldGame[key] = newGame[key];
-							},
-							() => {
-								oldGame.rememberChoice(key, newGame[key]);
-							});
+						let yesAction = () => {
+							oldGame[key] = newGame[key];
+						};
+
+						if (autoConfirmedKeys.has(key)) {
+							yesAction();
+						} else {
+							let imageUrl = key === "logoURL" ? newGame[key] : undefined;
+							await getConfirmation(`Would you like to update the ${key} property of ${oldGame.name} from "${oldGame[key]}" to "${newGame[key]}"?`,
+								yesAction,
+								() => {
+									oldGame.rememberChoice(key, newGame[key]);
+								},
+								() => {
+									console.log(`Auto confirming all future updates of the key '${key}'`);
+									yesAction();
+									autoConfirmedKeys.add(key);
+								},
+								imageUrl,
+							);
+						}
 					}
 				}
 			} else {
@@ -361,34 +375,45 @@ function migrateData(file: any) { // TODO: Investigate whether this is still val
 				game.img_icon_url = undefined;
 				game.img_logo_url = undefined;
 			}
-		}
+		} else if (file.verison === 0.2) {
+			// Nothing necessary for 0.2 -> 0.3
+		} else if (file.version === 0.3) { // Migrate 0.3 -> 0.31
+			for (let game of file.games) {
+				let publicImageURLStart = `https://media.steampowered.com/steamcommunity/public/images/apps/${game.appid}`;
+				if (game.iconURL !== undefined) {
+					game.iconURL = `${publicImageURLStart}/${game.iconURL}.jpg`;
+				}
 
-		// Nothing necessary for 0.2 -> 0.3
+				if (game.logoURL !== undefined) {
+					game.logoURL = `${publicImageURLStart}/${game.logoURL}.jpg`;
+				}
+			}
+		}
 	}
 }
 
-async function getConfirmation(question: string, yesCallback: (() => void), noCallback?: (() => void)) {
-	let toReturn = false;
-	await Swal({
+async function getConfirmation(question: string, yesCallback: (() => void), noCallback?: (() => void), yesToAllCallback?: (() => void), imageUrlParam?: string) {
+	await Swal.fire({
 		title: "Question",
 		text: question,
+		imageUrl: imageUrlParam,
+		imageHeight: 100,
 		showConfirmButton: true,
 		showCancelButton: true,
+		showDenyButton: true,
 		confirmButtonText: "Yes",
+		denyButtonText: "Yes to all for same property",
 		cancelButtonText: "No",
 		allowOutsideClick: false,
 	}).then(result => {
-		if (result.value) { // Yes
+		if (result.value && result.isConfirmed) { // Yes
 			yesCallback();
-			toReturn = true;
-		} else {
-			if (noCallback !== undefined)
-				noCallback();
-			toReturn = false;
+		} else if (result.isDenied && yesToAllCallback !== undefined) {
+			yesToAllCallback();
+		} else if (result.isDismissed && noCallback !== undefined) {
+			noCallback();
 		}
 	});
-
-	return toReturn; // This makes it obvious to the type checker that this returns a Promise of a boolean
 }
 
 /*function runTests() {

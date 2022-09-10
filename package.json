@@ -23,7 +23,7 @@
     "electron-squirrel-startup": "^1.0.0",
     "fs-jetpack": "^1.2.0",
     "reflect-metadata": "^0.1.12",
-    "sweetalert2": "^7.19.1",
+    "sweetalert2": "^11.4.32",
     "vue": "^2.5.13",
     "vue-tables-2": "^1.4.0",
     "vueify": "^9.4.1"
