@@ -14,12 +14,16 @@
 	<script lang="ts">
 	import Vue from 'vue';
 	import { ClientTable, Event } from 'vue-tables-2';
+	import VueApexCharts from 'vue-apexcharts'
 	import App from './App.vue';
 	import { DataManager } from './renderer';
 	import { EventManager } from './EventManager'
 	import EventBus from './EventBus';
 
 	Vue.use(ClientTable, {}, false, 'bootstrap4', 'default');
+
+	Vue.use(VueApexCharts);
+	Vue.component('apexchart', VueApexCharts)
 
 	const dataManager = new DataManager(EventBus);
 	const eventManager = new EventManager(EventBus, dataManager);

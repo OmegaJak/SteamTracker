@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain } from "electron";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import { enableLiveReload } from "electron-compile";
+const path = require('path')
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -44,7 +45,15 @@ const createWindow = async () => {
 };
 
 function createLastPlayedWindow() {
-	lastPlayedWindow = new BrowserWindow({ width: 800, height: 600, show: false });
+	lastPlayedWindow = new BrowserWindow({
+		width: 800,
+		height: 600,
+		show: false,
+		webPreferences: {
+			nodeIntegration: false,
+			preload: path.join(__dirname, 'preload.js')
+		} 
+	});
 	lastPlayedWindow.on("closed", () => {
 		lastPlayedWindow = null;
 	});
@@ -52,13 +61,12 @@ function createLastPlayedWindow() {
 	lastPlayedWindow.loadURL("https://steamcommunity.com/profiles/76561198055435897/games/?tab=all&sort=name");
 	lastPlayedWindow.webContents.on("dom-ready", () => {
 		lastPlayedWindow.webContents.executeJavaScript(`
-		const {ipcRenderer} = require('electron');
-
-		ipcRenderer.on('gamesScrapeRequest', (event, arg) => {
+		window.electronAPI.onGamesScrapeRequest((event, arg) => {
 			console.log("Scrape request received, sending rgGames response.");
-			ipcRenderer.send('gamesScrapeResponse', rgGames);
+			window.electronAPI.returnGames(rgGames);
 			console.log(rgGames);
 		});
+		window.electronAPI.sendWindowReady();
 		`);
 	});
 }
@@ -95,10 +103,11 @@ app.on("activate", () => {
 ipcMain.on("gamesScrapeRequest", (event, arg) => {
 	console.log("Scrape request received, creating the LastPlayed window.");
 	createLastPlayedWindow();
-	lastPlayedWindow.webContents.on("dom-ready", () => {
-		console.log("LastPlayed window finished loading, sending scrape request.");
-		lastPlayedWindow.webContents.send("gamesScrapeRequest", arg);
-	});
+});
+
+ipcMain.on("lastPlayedWindowReady", (event, arg) => {
+	console.log("LastPlayed window is ready, sending scrape request.");
+	lastPlayedWindow.webContents.send("gamesScrapeRequest", arg);
 });
 
 ipcMain.on("gamesScrapeResponse", (event, arg) => {
