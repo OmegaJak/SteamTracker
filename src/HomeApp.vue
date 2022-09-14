@@ -19,6 +19,10 @@
 		</div>
 		<div class="summaryBox" id="topSummary">
 			<div>
+				Total Time: {{ totalPlaytime.toFixed(1) }}h
+			</div>
+			<div class="delimiter"></div>
+			<div>
 				Most Played:
 			</div>
 			<div class="delimiter"></div>
@@ -30,7 +34,34 @@
 </template>
 
 <script lang="ts">
-export default {};
+import { DataManager } from "./renderer";
+import EventBus from "./EventBus";
+import Events from "./Events";
+import { GameMap } from "./Game";
+
+export default {
+	data() {
+		return {
+			totalPlaytime: 0,
+		};
+	},
+	props: {
+		dataManager: DataManager,
+	},
+	created() {
+		EventBus.$on(Events.gamesUpdated, (response: any) => {
+			console.log("Recalculating total playtime");
+			let responseGames: GameMap = response;
+			let totalMinutes = 0;
+			responseGames.forEach(game => {
+				totalMinutes += game.totalPlaytime;
+			});
+
+			let totalHours = totalMinutes / 60.0;
+			this.totalPlaytime = totalHours;
+		});
+	}
+};
 </script>
 
 <style scoped>
