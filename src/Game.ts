@@ -12,10 +12,11 @@ export interface ScrapeData {
 }
 
 export class PlaytimePoint {
-	date: string;
+	@Type(() => Date)
+	date: Date;
 	playtime: number;
 
-	constructor(date: string, playtime: number) {
+	constructor(date: Date, playtime: number) {
 		this.date = date;
 		this.playtime = playtime;
 	}
@@ -86,25 +87,19 @@ export class Game {
 			this.children = undefined;
 	}
 
-	public setZero(date?: Date | string) {
+	public setZero(date?: Date) {
 		if (date === undefined)
 			date = new Date();
 
 		if (this.playtimeHistory.length === 0 || this.playtimeHistory[this.playtimeHistory.length - 1].playtime !== 0) {
 			this.addHistPoint(date, 0);
 		} else {
-			this.playtimeHistory[this.playtimeHistory.length - 1].date = typeof date === "string" ? date : date.toISOString();
+			this.playtimeHistory[this.playtimeHistory.length - 1].date = date;
 		}
 	}
 
-	public addHistPoint(date: Date | string, time: number) {
-		let dateStr: string;
-		if (typeof date === "string")
-			dateStr = date;
-		else
-			dateStr = date.toISOString();
-
-		this.playtimeHistory.push(new PlaytimePoint(dateStr, time));
+	public addHistPoint(date: Date, time: number) {
+		this.playtimeHistory.push(new PlaytimePoint(date, time));
 	}
 
 	public rememberChoice(property: string, value: string) {
