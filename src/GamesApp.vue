@@ -165,7 +165,7 @@ export default {
 	methods: {
 		showGameData(props: any) {
 			let dataMan: DataManager = this.dataManager;
-			alert(dataMan.historyFile.getGameHistory(props.row.appid));
+			alert(dataMan.historyFile.getGameHistoryString(props.row.appid));
 			if (dataMan.historyFile.games !== undefined)
 				console.log(dataMan.historyFile.games.get(props.row.appid));
 

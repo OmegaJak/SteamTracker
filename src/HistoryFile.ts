@@ -1,10 +1,10 @@
 import { classToClass } from "class-transformer";
-import { GameMap, ScrapeData } from "./Game";
+import { GameMap, PlaytimePoint, ScrapeData } from "./Game";
 import { GameID, IDTracker } from "./IDTracker";
 
 export class HistoryFile {
 	version?: number;
-	lastRun: string;
+	lastRun: Date;
 	idTracker: IDTracker;
 	games?: GameMap;
 
@@ -17,13 +17,13 @@ export class HistoryFile {
 		this.idTracker = new IDTracker(gameIDs);
 
 		if (lastRun !== undefined) {
-			this.lastRun = lastRun;
+			this.lastRun = new Date(lastRun);
 		} else if (this.games !== undefined && this.games.values().next().value.playtimeHistory !== undefined) {
 			//this.lastRun = this.games[0].playtimeHistory[this.games[0].playtimeHistory.length - 1].date;
 			let firstHist = this.games.values().next().value.playtimeHistory;
-			this.lastRun = firstHist[firstHist.length - 1].date;
+			this.lastRun = new Date(firstHist[firstHist.length - 1].date);
 		} else {
-			this.lastRun = new Date(0).toISOString(); // Just in case
+			this.lastRun = new Date(0);
 		}
 	}
 
@@ -44,13 +44,13 @@ export class HistoryFile {
 
 		return {
 			version: this.version,
-			lastRun: new Date().toISOString(),
+			lastRun: new Date(),
 			idTracker: this.idTracker ? this.idTracker.gameIDs : undefined,
 			games: Array.from(gamesCopy.values()),
 		};
 	}
 
-	public getGameHistory(gameID: number): string {
+	public getGameHistoryString(gameID: number): string {
 		if (this.games === undefined)
 			return "No Games Are Known!"; // Theoretically impossible to get here
 
