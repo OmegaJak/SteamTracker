@@ -1,12 +1,24 @@
 <template>
 	<div>
 		<button @click="updateChart()">Update</button>
+		<select v-model="gameSelection">
+			<option disabled value="">Please Select</option>
+			<option v-for="choice in gameChoices" :value="choice" :key="choice.appid">{{choice.name}}</option>
+		</select>
 		<apexchart width="800px" height="800px" type="area" :options="chartOptions" :series="series"></apexchart>
 	</div>
 </template>
 
 <script lang="ts">
+class GameChoice {
+	name: string;
+	appid: number;
+}
+
 import { DataManager } from "./renderer";
+import EventBus from "./EventBus";
+import Events from "./Events";
+import { GameMap } from './Game';
 
 export default {
 	data() {
@@ -19,33 +31,52 @@ export default {
 					width: "100%"
 				},
 				xaxis: {
-					type: 'datetime'
+					type: "datetime",
+					title: {
+						text: "Date",
+					},
+				},
+				yaxis: {
+					title: {
+						text: "Cumulative Playtime (hr.)",
+					},
+					labels: {
+						formatter: (v: number) => v.toFixed(1),
+					},
 				},
 				stroke: {
-					curve: 'straight'
+					curve: "straight",
 				},
 				dataLabels: {
-					enabled: false
+					enabled: false,
+				},
+				title: {
+					text: "{{Game}} Playtime",
 				}
 			},
 			series: [{
 				data: [{
 					x: new Date('2018-02-12').getTime(),
-					y: 76
+					y: 76,
 				}, {
 					x: new Date('2018-02-13').getTime(),
-					y: 78
+					y: 78,
 				}, {
 					x: new Date('2018-02-18').getTime(),
-					y: 780
+					y: 780,
 				}, {
 					x: new Date('2018-02-20').getTime(),
-					y: 780
+					y: 780,
 				}, {
 					x: new Date('2018-02-25').getTime(),
-					y: 900
-				}]
-			}]
+					y: 900,
+				}],
+			}],
+			gameChoices: [
+				{ name: "Duck Game", appid: 312530 },
+				{ name: "Minecraft", appid: -1 },
+			],
+			gameSelection: {},
 		}
 	},
 	props: {
@@ -54,14 +85,17 @@ export default {
 	methods: {
 		updateChart() {
 			let dataMan: DataManager = this.dataManager;
-			let history = dataMan?.historyFile?.games?.get(312530)?.playtimeHistory;
+			let selection = this.gameSelection;
+			console.log("Currently selected:");
+			console.log(selection.appid);
+			let history = dataMan?.historyFile?.games?.get(selection.appid)?.playtimeHistory;
 			if (history !== undefined) {
 				let chartData = new Array<{ x: number, y: number }>();
-				let cumulativePlaytime = 0;
+				let cumulativePlaytimeHrs = 0;
 				for (const playtimePoint of history) {
-					cumulativePlaytime += playtimePoint.playtime;
+					cumulativePlaytimeHrs += playtimePoint.playtime / 60.0;
 					try {
-						chartData.push({x: playtimePoint.date.getTime(), y: cumulativePlaytime});
+						chartData.push({x: playtimePoint.date.getTime(), y: cumulativePlaytimeHrs});
 					} catch (e) {
 						console.error(e);
 						console.error("Had a problem with point:");
@@ -71,9 +105,21 @@ export default {
 				}
 
 				this.series = [{ data: chartData }];
+				this.chartOptions = { title: { text: `${selection.name} Playtime` } };
 			}
 		},
 	},
+	created() {
+		EventBus.$on(Events.gamesUpdated, (response: any) => {
+			let responseGames: GameMap = response;
+			let gameChoices = new Array<GameChoice>();
+			responseGames.forEach(game => {
+				gameChoices.push({ name: game.name, appid: game.appid });
+			});
+
+			this.gameChoices = gameChoices;
+		});
+	}
 };
 </script>
 
