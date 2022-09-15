@@ -1,11 +1,12 @@
 <template>
 	<div>
-		<button @click="updateChart()">Update</button>
-		<select v-model="gameSelection">
+		<!-- <button @click="updateChart()">Update</button> -->
+		<!-- <select v-model="gameSelection">
 			<option disabled value="">Please Select</option>
 			<option v-for="choice in gameChoices" :value="choice" :key="choice.appid">{{choice.name}}</option>
-		</select>
-		<apexchart width="800px" height="800px" type="area" :options="chartOptions" :series="series"></apexchart>
+		</select> -->
+		<v-select v-model="gameSelection" label="name" :options="gameChoices" @input="gameSelectionUpdated"></v-select>
+		<apexchart width="800px" height="600px" type="area" :options="chartOptions" :series="series"></apexchart>
 	</div>
 </template>
 
@@ -38,11 +39,14 @@ export default {
 				},
 				yaxis: {
 					title: {
-						text: "Cumulative Playtime (hr.)",
+						text: "Cumulative Playtime (hrs.)",
 					},
 					labels: {
 						formatter: (v: number) => v.toFixed(1),
 					},
+					min: 0,
+					forceNiceScale: true,
+					tickAmount: 10,
 				},
 				stroke: {
 					curve: "straight",
@@ -83,9 +87,8 @@ export default {
 		dataManager: DataManager,
 	},
 	methods: {
-		updateChart() {
+		gameSelectionUpdated(selection: GameChoice) {
 			let dataMan: DataManager = this.dataManager;
-			let selection = this.gameSelection;
 			console.log("Currently selected:");
 			console.log(selection.appid);
 			let history = dataMan?.historyFile?.games?.get(selection.appid)?.playtimeHistory;
@@ -105,7 +108,7 @@ export default {
 				}
 
 				this.series = [{ data: chartData }];
-				this.chartOptions = { title: { text: `${selection.name} Playtime` } };
+				this.chartOptions = { title: { text: `Playtime - ${selection.name}` } };
 			}
 		},
 	},

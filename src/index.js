@@ -15,8 +15,8 @@ const isDevMode = process.execPath.match(/[\\/]electron/);
 const createWindow = async () => {
 	// Create the browser window.
 	mainWindow = new BrowserWindow({
-		width: 800,
-		height: 600,
+		width: 1076,
+		height: 771,
 		webPreferences: {
 			devTools: true
 		}
