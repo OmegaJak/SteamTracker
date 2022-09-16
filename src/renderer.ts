@@ -45,9 +45,11 @@ export class DataManager {
 		console.time("mainUpdate");
 		console.time("readFile");
 		this.eventBus.$emit(Events.fetchingData, true, "Reading File on Disk...");
-		this.jetpack.readAsync(jsonPath + "Play History.json", "json")
+		this.jetpack.readAsync(jsonPath + "Play History.json", "jsonWithDates")
 		.then( (file: any) => {
 			console.timeEnd("readFile");
+			console.log("File:");
+			console.log(file);
 			this.rawFile = file;
 
 			if (file) {
@@ -148,6 +150,8 @@ export class DataManager {
 function parseGamesArray(games: any): GameMap {
 	function convertToGamesArr(rawArr: any): Game[] {
 		let gamesArr = deserializeArray(Game, JSON.stringify(rawArr));
+		console.log("GamesArr:");
+		console.log(gamesArr);
 
 		for (let game of gamesArr) {
 			if (game.children !== undefined)
@@ -160,7 +164,7 @@ function parseGamesArray(games: any): GameMap {
 	return mapFromGames(convertToGamesArr(games));
 }
 
-async function updateGameHistory(newGamesData: GameMap, oldGamesData: GameMap, lastRun: string, dataSrc: string): Promise<GameMap> {
+async function updateGameHistory(newGamesData: GameMap, oldGamesData: GameMap, lastRun: Date, dataSrc: string): Promise<GameMap> {
 	console.log("Updating data");
 
 	// if it finds an unplayed game, it should update the only date there to the current date
@@ -198,7 +202,7 @@ async function updateGameHistory(newGamesData: GameMap, oldGamesData: GameMap, l
 	return oldGamesData;
 }
 
-async function updateGame(oldGame: Game, newGame: Game, lastRun: string, isNewGame: boolean, dataSrc: string) {
+async function updateGame(oldGame: Game, newGame: Game, lastRun: Date, isNewGame: boolean, dataSrc: string) {
 	function helper(children?: Game[]): GameMap {
 		return children !== undefined ? mapFromGames(children) : new Map<number, Game>();
 	}
@@ -218,12 +222,12 @@ async function updateGame(oldGame: Game, newGame: Game, lastRun: string, isNewGa
 	}
 }
 
-async function gameUpdateLogic(oldGame: Game, responseGame: Game, mostRecentDate: string, isNewGame: boolean) {
+async function gameUpdateLogic(oldGame: Game, responseGame: Game, mostRecentDate: Date, isNewGame: boolean) {
 	await updateGamePlaytime(isNewGame, responseGame, oldGame, mostRecentDate);
 	await updateOtherProperties(responseGame, oldGame);
 }
 
-async function updateGamePlaytime(isNewGame: boolean, responseGame: Game, oldGame: Game, mostRecentDate: string) {
+async function updateGamePlaytime(isNewGame: boolean, responseGame: Game, oldGame: Game, mostRecentDate: Date) {
 	let now = new Date();
 
 	if (isNewGame && responseGame.playtime2Weeks) {
@@ -300,7 +304,7 @@ async function updateOtherProperties(newGame: Game, oldGame: Game) {
 	}
 }
 
-async function determineChunkage(oldGame: Game, responseGame: Game, mostRecentDate: string, diff: number) { // May or may not support updates mid-game
+async function determineChunkage(oldGame: Game, responseGame: Game, mostRecentDate: Date, diff: number) { // May or may not support updates mid-game
 	let prePlay = subMinutes(lastPlayed(responseGame), diff); // Basically the time when the game would've been started had the recent playtime been in one chunk
 	if (Math.abs(differenceInMinutes(prePlay, mostRecentDate)) > 5) { // If it had been over 5 minutes between when the game was last checked and it was theoretically started
 		await getConfirmation("Was the recent " + diff + " minutes of " + responseGame.name + " in one chunk?\n" +
@@ -337,7 +341,7 @@ async function initializeGames(srcData: GameMap)/* : Promise<GameMap> */ {
 
 		game.playtimeHistory = [];
 
-		await gameUpdateLogic(oldGame, game, subDays(new Date(), 100).toISOString(), true);
+		await gameUpdateLogic(oldGame, game, subDays(new Date(), 100), true);
 		newGames.set(oldGame.appid, oldGame);
 	}
 
