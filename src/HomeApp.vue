@@ -6,11 +6,11 @@
 		</div>
 		<div class="summaryBox" id="valueSummary">
 			<div>
-				$/Hr:
+				$/Hr: {{ (totalCost / totalPlaytime).toFixed(2) }}
 			</div>
 			<div class="delimiter"></div>
 			<div>
-				Total Cost:
+				Total Cost: ${{ totalCost.toFixed(2) }}
 			</div>
 			<div class="delimiter"></div>
 			<div>
@@ -43,6 +43,7 @@ export default {
 	data() {
 		return {
 			totalPlaytime: 0,
+			totalCost: 0,
 		};
 	},
 	props: {
@@ -53,12 +54,15 @@ export default {
 			console.log("Recalculating total playtime");
 			let responseGames: GameMap = response;
 			let totalMinutes = 0;
+			let totalCost = 0;
 			responseGames.forEach(game => {
 				totalMinutes += game.totalPlaytime;
+				if (game.spent !== undefined) totalCost += game.spent;
 			});
 
 			let totalHours = totalMinutes / 60.0;
 			this.totalPlaytime = totalHours;
+			this.totalCost = totalCost;
 		});
 	}
 };
