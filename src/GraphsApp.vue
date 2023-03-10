@@ -91,6 +91,9 @@ export default {
 			let dataMan: DataManager = this.dataManager;
 			console.log("Currently selected:");
 			console.log(selection.appid);
+
+			dataMan?.historyFile ?.getAllPlaytimeHistoryCsv();
+
 			let history = dataMan?.historyFile?.games?.get(selection.appid)?.playtimeHistory;
 			if (history !== undefined) {
 				let chartData = new Array<{ x: number, y: number }>();
