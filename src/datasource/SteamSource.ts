@@ -6,21 +6,7 @@ export default class SteamData implements DataSource {
 	readonly srcName = "Steam";
 
 	public async getData() {
-		let [scrape, response] = await Promise.all([this.getScrapeData(), this.getAPIData()]);
-		return (this.combineData(scrape, response));
-	}
-
-	private async getScrapeData() {
-		ipcRenderer.send("gamesScrapeRequest");
-		return new Promise<ScrapeData[]>((resolve, reject) => {
-			ipcRenderer.on("gamesScrapeResponse", (event: any, arg: ScrapeData[]) => {
-				console.log("Scrape response received:");
-				console.log(arg);
-
-				resolve(arg as ScrapeData[]);
-			});
-			setTimeout(() => { reject("Scrape Data Timeout"); }, 10000); // If no scrape data has come back in 10 seconds, it probably failed
-		});
+		return this.getAPIData();
 	}
 
 	private async getAPIData() {
@@ -52,6 +38,9 @@ export default class SteamData implements DataSource {
 							responseGame.img_logo_url = `https://steamcdn-a.akamaihd.net/steam/apps/${responseGame.appid}/header.jpg`;
 						}
 						currentGame = new Game(responseGame.appid, responseGame.name, responseGame.playtime_forever, [], responseGame.img_logo_url);
+						if (responseGame.rtime_last_played !== undefined && responseGame.rtime_last_played !== 0) {
+							currentGame.lastPlayed = new Date(responseGame.rtime_last_played * 1000).toISOString(); // Date takes UTC milliseconds, last_played is UTC seconds
+						}
 						currentGame.iconURL = responseGame.img_icon_url;
 						currentGame.playtime2Weeks = responseGame.playtime_2weeks;
 						responseGames.set(currentGame.appid, currentGame);
@@ -67,24 +56,5 @@ export default class SteamData implements DataSource {
 
 			setTimeout(() => { reject("API Query Timeout"); }, 10000);
 		});
-	}
-
-	private combineData(scrape: ScrapeData[], response: GameMap): GameMap {
-		scrape.forEach( scrapedGame => {
-			let game = response.get(scrapedGame.appid);
-			if (game !== undefined && scrapedGame.last_played !== undefined) {
-				game.lastPlayed = new Date(scrapedGame.last_played * 1000).toISOString(); // Date takes UTC milliseconds, last_played is UTC seconds
-
-				if (game.playtime2Weeks === null) { // Prefer the playtime_2weeks gathered from the api call over the scrape data (it's in minutes, scrape is in hours)
-					let hours = Number(scrapedGame.hours) * 60; // Valve stores playtime2Weeks in a var called hours
-					game.playtime2Weeks = !isNaN(hours) ? hours : undefined;
-				}
-				// TODO: Examine why lastPlayed is stored as a string
-			} else if (game === undefined) {
-				console.log("game \"" + scrapedGame + "\" had no corresponding analogue in the API response");
-			}
-		});
-
-		return response;
 	}
 }

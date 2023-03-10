@@ -6,7 +6,6 @@ const path = require('path')
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
-let lastPlayedWindow;
 
 const isDevMode = process.execPath.match(/[\\/]electron/);
 
@@ -44,37 +43,6 @@ const createWindow = async () => {
 	test.mainWindow = mainWindow;
 };
 
-function createLastPlayedWindow() {
-	lastPlayedWindow = new BrowserWindow({
-		width: 800,
-		height: 600,
-		show: false,
-		webPreferences: {
-			nodeIntegration: false,
-			preload: path.join(__dirname, 'preload.js')
-		} 
-	});
-	lastPlayedWindow.on("closed", () => {
-		lastPlayedWindow = null;
-	});
-
-	lastPlayedWindow.loadURL("https://steamcommunity.com/profiles/PUTYOURIDHERE/games/?tab=all&sort=name");
-	lastPlayedWindow.webContents.on("dom-ready", () => {
-		lastPlayedWindow.webContents.executeJavaScript(`
-		window.electronAPI.onGamesScrapeRequest((event, arg) => {
-			console.log("Scrape request received, sending rgGames response.");
-			window.electronAPI.returnGames(rgGames);
-			console.log(rgGames);
-		});
-		window.electronAPI.sendWindowReady();
-		`);
-	});
-}
-
-function closeLastPlayedWindow() {
-	lastPlayedWindow.close();
-}
-
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -96,27 +64,4 @@ app.on("activate", () => {
 	if (mainWindow === null) {
 		createWindow();
 	}
-});
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and import them here.
-ipcMain.on("gamesScrapeRequest", (event, arg) => {
-	console.log("Scrape request received, creating the LastPlayed window.");
-	createLastPlayedWindow();
-});
-
-ipcMain.on("lastPlayedWindowReady", (event, arg) => {
-	console.log("LastPlayed window is ready, sending scrape request.");
-	lastPlayedWindow.webContents.send("gamesScrapeRequest", arg);
-});
-
-ipcMain.on("gamesScrapeResponse", (event, arg) => {
-	// console.log(arg)  // prints "ping"
-	// event.sender.send('asynchronous-reply', 'pong')
-	console.log("Scrape response received, sending along to main window.");
-	mainWindow.webContents.send("gamesScrapeResponse", arg);
-	setTimeout(() => {
-		console.log("Closing LastPlayed window");
-		closeLastPlayedWindow();
-	}, 3000);
 });
