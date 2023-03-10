@@ -28,7 +28,8 @@
     "vue-apexcharts": "^1.6.2",
     "vue-select": "^3.20.0",
     "vue-tables-2": "^1.4.0",
-    "vueify": "^9.4.1"
+    "vueify": "^9.4.1",
+    "electron-prebuilt-compile": "4.0.0"
   },
   "devDependencies": {
     "babel-plugin-transform-async-to-generator": "^6.24.1",
