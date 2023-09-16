@@ -16,6 +16,7 @@ export default class SteamData implements DataSource {
 			"format=json",
 			"include_appinfo=true",
 			"include_played_free_games=true",
+			"skip_unvetted_apps=false", // include things like OpenTTD, Caveblazers: Together
 		];
 
 		const params = fields.join("&");
