@@ -14,6 +14,7 @@
 class GameChoice {
 	name: string;
 	appid: number;
+	lastPlayed: string | undefined;
 }
 
 import { DataManager } from "./renderer";
@@ -117,7 +118,12 @@ export default {
 			let responseGames: GameMap = response;
 			let gameChoices = new Array<GameChoice>();
 			responseGames.forEach(game => {
-				gameChoices.push({ name: game.name, appid: game.appid });
+				gameChoices.push({ name: game.name, appid: game.appid, lastPlayed: game.lastPlayed });
+			});
+			gameChoices.sort((a, b) => {
+				let aLastPlayed = new Date(a.lastPlayed ?? 0).getTime();
+				let bLastPlayed = new Date(b.lastPlayed ?? 0).getTime();
+				return bLastPlayed - aLastPlayed;
 			});
 
 			this.gameChoices = gameChoices;
