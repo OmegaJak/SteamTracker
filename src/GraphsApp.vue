@@ -5,8 +5,9 @@
 			<option disabled value="">Please Select</option>
 			<option v-for="choice in gameChoices" :value="choice" :key="choice.appid">{{choice.name}}</option>
 		</select> -->
-		<v-select v-model="gameSelection" label="name" :options="gameChoices" @input="gameSelectionUpdated"></v-select>
-		<apexchart width="800px" height="600px" type="area" :options="chartOptions" :series="series"></apexchart>
+		<v-select ref="gameSelect" v-model="gameSelection" label="name" :options="gameChoices" @input="gameSelectionUpdated"></v-select>
+		<apexchart width="100%" height="600px" type="area" :options="chartOptions" :series="series"></apexchart>
+		<apexchart width="100%" height="600px" type="treemap" :options="distChartOptions" :series="distSeries"></apexchart>
 	</div>
 </template>
 
@@ -20,7 +21,7 @@ class GameChoice {
 import { DataManager } from "./renderer";
 import EventBus from "./EventBus";
 import Events from "./Events";
-import { GameMap } from './Game';
+import { Game, GameMap } from "./Game";
 
 export default {
 	data() {
@@ -30,7 +31,7 @@ export default {
 				chart: {
 					id: "time-area",
 					height: "100%",
-					width: "100%"
+					width: "100%",
 				},
 				xaxis: {
 					type: "datetime",
@@ -61,20 +62,55 @@ export default {
 			},
 			series: [{
 				data: [{
-					x: new Date('2018-02-12').getTime(),
+					x: new Date("2018-02-12").getTime(),
 					y: 76,
 				}, {
-					x: new Date('2018-02-13').getTime(),
+					x: new Date("2018-02-13").getTime(),
 					y: 78,
 				}, {
-					x: new Date('2018-02-18').getTime(),
+					x: new Date("2018-02-18").getTime(),
 					y: 780,
 				}, {
-					x: new Date('2018-02-20').getTime(),
+					x: new Date("2018-02-20").getTime(),
 					y: 780,
 				}, {
-					x: new Date('2018-02-25').getTime(),
+					x: new Date("2018-02-25").getTime(),
 					y: 900,
+				}],
+			}],
+			distChartOptions: {
+				chart: {
+					id: "dist-chart",
+					events: {
+						dataPointSelection: (event: any, context: any, config: any) => {
+							let clickedName = context.data.twoDSeriesX[config.dataPointIndex];
+							let game = this.$data.gameChoices.find((choice: any) => choice.name === clickedName);
+							this.$data.gameSelection = game;
+
+							let gameSelect: any = this.$refs.gameSelect;
+							gameSelect.select(game);
+							gameSelect.closeSearchOptions();
+						},
+					},
+				},
+				tooltip: {
+					y: {
+						formatter: (value: number, unused: any) => {
+							return (Math.round(value * 100) / 100) + " Hrs";
+						},
+					},
+				},
+			},
+			distSeries: [{
+				data: [{
+					x: "category A",
+					y: 10,
+				}, {
+					x: "category B",
+					y: 18,
+				}, {
+					x: "category C",
+					y: 13,
 				}],
 			}],
 			gameChoices: [
@@ -82,7 +118,8 @@ export default {
 				{ name: "Minecraft", appid: -1 },
 			],
 			gameSelection: {},
-		}
+			hasPopulatedDistChart: false,
+		};
 	},
 	props: {
 		dataManager: DataManager,
@@ -112,6 +149,37 @@ export default {
 				this.chartOptions = { title: { text: `Playtime - ${selection.name}` } };
 			}
 		},
+		tabChanged(newTab: string) {
+			if (newTab === "graphs" && !this.$data.hasPopulatedDistChart) {
+				console.log("Populating distribution chart");
+				let games: GameMap | undefined = this.dataManager?.historyFile?.games;
+				if (games !== undefined) {
+					let sortedGames = Array.from(games.values()).sort((a, b) => {
+						// sort descending
+						if (a.totalPlaytime > b.totalPlaytime) {
+							return -1;
+						}
+
+						if (a.totalPlaytime < b.totalPlaytime) {
+							return 1;
+						}
+
+						return 0;
+					});
+					let chartData = new Array<{ x: string, y: number }>();
+					sortedGames.forEach((game, _) => {
+						if (game.totalPlaytime > 0) {
+							let playtimeHours = game.totalPlaytimeHours();
+							chartData.push({ x: game.name, y: playtimeHours });
+						}
+					});
+
+					this.distSeries = [{ data: chartData }];
+				}
+
+				this.$data.hasPopulatedDistChart = true;
+			}
+		},
 	},
 	created() {
 		EventBus.$on(Events.gamesUpdated, (response: any) => {
@@ -128,7 +196,7 @@ export default {
 
 			this.gameChoices = gameChoices;
 		});
-	}
+	},
 };
 </script>
 

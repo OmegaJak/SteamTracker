@@ -81,6 +81,10 @@ export class Game {
 		this.logoURL = logoURL;
 	}
 
+	public totalPlaytimeHours() {
+		return this.totalPlaytime / 60.0;
+	}
+
 	public prepareForWrite() {
 		this.playtime2Weeks = undefined;
 		if (this.children !== undefined && this.children.length === 0)

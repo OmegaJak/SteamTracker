@@ -34,6 +34,9 @@ export default class SteamData implements DataSource {
 					let responseGames: GameMap = new Map<number, Game>();
 					let currentGame: Game;
 					for (const responseGame of response.response.games) {
+						if (responseGame.name == "Duck Game") {
+							console.log(responseGame);
+						}
 						if (responseGame.img_logo_url === undefined) {
 							// https://stackoverflow.com/a/54200977
 							responseGame.img_logo_url = `https://steamcdn-a.akamaihd.net/steam/apps/${responseGame.appid}/header.jpg`;
