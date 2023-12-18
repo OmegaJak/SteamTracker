@@ -106,8 +106,8 @@ export class DataManager {
 
 	private async updateSources() {
 		await this.updateFromSrc(new SteamData(), "Fetching Steam Data...");
-		await this.updateFromSrc(new MinecraftData("C:/Users/JAK/MultiMC/instances", this.historyFile.idTracker),
-									"Updating Minecraft Data...");
+		await this.updateFromSrc(new MinecraftData("C:/Users/JAK/AppData/Roaming/PrismLauncher/instances", this.historyFile.idTracker),
+			"Updating Minecraft Data...");
 
 		console.timeEnd("mainUpdate");
 	}

@@ -48,8 +48,8 @@ export default class MinecraftData implements DataSource {
 			if (this.jet.exists(fileLocation)) {
 				success = true;
 				let instanceCfg: string = await this.jet.readAsync(this.jet.cwd() + "/" + dirname + "/instance.cfg");
-				let totalPlaytimeMatches = instanceCfg.match(/totalTimePlayed=(\d*)\n/);
-				let lastPlayedMatches = instanceCfg.match(/lastLaunchTime=(\d*)\n/);
+				let totalPlaytimeMatches = instanceCfg.match(/totalTimePlayed=(\d*)\r?\n/);
+				let lastPlayedMatches = instanceCfg.match(/lastLaunchTime=(\d*)\r?\n/);
 
 				let playtime: number = 0;
 				let lastPlayed: string = "Invalid Date";
