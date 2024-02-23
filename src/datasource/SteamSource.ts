@@ -10,9 +10,18 @@ export default class SteamData implements DataSource {
 	}
 
 	private async getAPIData() {
+		const steamApiKey = process.env.STEAM_API_KEY?.trim();
+		const steamId = process.env.STEAM_ID?.trim();
+		if (steamApiKey === undefined) {
+			console.error("Steam API Key not set. SteamTracker expects an environment variable called \"STEAM_API_KEY\" to be available with a valid key");
+		}
+		if (steamId === undefined) {
+			console.error("Steam Id not set. SteamTracker expects an environment variable called \"STEAM_ID\" to be available with a steam user id");
+		}
+
 		const fields = [
-			"key=PUTYOURKEYHERE",
-			"steamid=PUTYOURIDHERE",
+			`key=${steamApiKey}`,
+			`steamid=${steamId}`,
 			"format=json",
 			"include_appinfo=true",
 			"include_played_free_games=true",
